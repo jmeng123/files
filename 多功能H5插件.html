@@ -973,7 +973,7 @@
 	</div>
 	<script type="text/javascript">
 		let js = 'hiker://files/rules/js/';
-		let ln = 'hiker://files/rules/dzHouse/html/';
+		let ln = 'hiker://files/Jm/file/';
 		let wn = 'https://hikerfans.com/weisyr/';
 		setTimeout(function () {
 			let name = ['plug/tyyy.js', 'plug/spy.js', 'plug/cytq.js', 'plug/mryw.js', 'img/mm1.png', 'img/music.jpg', 'img/mask_tq.jpg', 'img/frosted.png', 'icon/下载.svg', 'icon/历史.svg', 'icon/书签.svg', 'icon/仓库.svg'];
@@ -1791,20 +1791,7 @@
 		darkModeHandler()
 		// 监听模式变化
 		mediaQuery.addListener(darkModeHandler)
-		function update(Up) {
-			if (request(ln+'update.json')!=Up) {
-				if (push_tips) alert(push_tips);
-				var x5=request('https://github.jevons.vip/https://raw.githubusercontent.com/jmeng123/files/main/多功能H5插件.html');
-				if(x5.indexOf("search_bg")>0) {
-					fba.writeFile(ln+'多功能h5插件.html',x5)
-					fba.writeFile(ln+'update.json',Up);
-					alert("多功能h5插件更新成功")
-				} else {
-					alert("更新出错❌ \n\n您可到道长仓库手动导入更新")
-					fba.writeFile(ln+'update.json',Up);
-				}
-			}
-		};
+				
 		eval(request(wn + 'plug/caidan.js'));
 	</script>
 </body>
