@@ -976,7 +976,7 @@
 		let ln = 'hiker://files/Jm/file/H5/';
 		let wn = 'https://hikerfans.com/weisyr/';
 		setTimeout(function () {
-			let name = ['plug/tyyy.js', 'plug/spy.js', 'plug/cytq.js', 'plug/mryw.js', 'img/mm1.png', 'img/music.jpg', 'img/mask_tq.jpg', 'img/frosted.png', 'icon/下载.svg', 'icon/历史.svg', 'icon/书签.svg', 'icon/仓库.svg'];
+			let name = ['plug/tyyy.js', 'plug/spy.js', 'plug/cytq.js', 'img/mm1.png', 'img/music.jpg', 'img/mask_tq.jpg', 'img/frosted.png', 'icon/下载.svg', 'icon/历史.svg', 'icon/书签.svg', 'icon/仓库.svg'];
 			for (let n = 0; n < name.length; n++) {
 				let localfile = [ln + name[n]];
 				let webfile = [wn + name[n]];
@@ -1448,8 +1448,8 @@
 			fba.open(JSON.stringify({title:"历史上的今天", url:"#noHistory#https://www.ipip5.com/today/api.php?type=json", findRule: rule, extra:{newWindow: true,windowId: "历史上的今天"}}))
 		});
 		$(".time").click(function () {
-			let rule = request(ln + 'plug/mryw.js');
-			fba.open(JSON.stringify({title:"每日一文", url:"hiker://empty", findRule: rule, extra:{newWindow: true,windowId: "每日一文"}}))
+			let rule = "js:let d=[];d.push({col_type:'x5_webview_single',desc:'float&&100%',url:'http://m.wufazhuce.com/one',extra: {canBack: true}});setResult(d);"
+			fba.open(JSON.stringify({title:"一个图文", url:"hiker://empty#fullTheme#", findRule: rule, extra:{newWindow: true,windowId: "一个图文"}}))
 		});
 
 		$("#touch").click(function () {
