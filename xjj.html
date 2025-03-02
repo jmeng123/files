@@ -1,79 +1,79 @@
-<!DOCTYPE html>
-<html lang="zh-CN">
- <head> 
-  <meta charset="UTF-8" /> 
-  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
-  <title>小姐姐短视频</title> 
-  <style>
-			*{
-			    margin:0px; 
-			    padding:0px;
-			    touch-action: pan-y;
-			    text-align: center;
+<！doctype html>
+<超文本标记语言 朗="zh-CN">
+ <头> 
+  <元 字符集="UTF-8" /> 
+  <元 姓名="视口" 内容="宽度=设备宽度，初始比例=1.0" />
+  <标题>小姐姐短视频</标题> 
+  <风格>
+*{
+			    边缘:0PX;
+			    填充:0PX;
+			    触摸动作:泛Y;
+			    文本对齐:中心;
 			}
 			
-			.app{
-			    width: 100%; 
-			    height:100%; 
-			    position: absolute; 
-			    top:0px; 
-			    right:0px; 
-			    bottom: 0px; 
-			    left:0px; 
-			    overflow: hidden;
-			    background-color: #ddd;
+.应用程序{
+			    宽度:100%;
+			    高度:100%;
+			    位置:绝对的;
+			    顶端:0PX;
+			    正确的:0PX;
+			    底部:0PX;
+			    左:0PX;
+			    溢出:隐藏的;
+			    背景色：#ddd；
 			    
 			} 
-			#myVideo{
-			    width: 100%;
-			    height: 100%;
-			    object-fit: cover; 
-			    object-position: center center;
-			    z-index: 100;
+#MyVideo{
+			    宽度:100%;
+			    高度:100%;
+			    对象拟合:覆盖;
+			    物体位置:中心 中心;
+			    Z指数:100;
 			    
 			}
 			
-			.play-icon {
+.播放图标 {
 			
-                width: 100%;
-                height: 100%;
-                position: absolute;
-                //object-fit: cover; 
-                background-position: 50% 50%;
-                top: 0px;
-                left: 0px;
-                opacity: 0;
-                transition: opacity 0s;
-                background: url("https://s21.ax1x.com/2024/03/26/pF56HHO.png"); 
-                background-repeat: no-repeat;
-                background-position-x: center;
-                background-position-y: center;
-                background-size: 63px 63px            
+                宽度:100%;
+                高度:100%;
+                位置:绝对的;
+//对象拟合:覆盖;
+                背景位置:50% 50%;
+                顶端:0PX;
+                左:0PX;
+                不透明度:0;
+                过渡:不透明度 0s;
+                背景:URL("https://s21.ax1x.com/2024/03/26/pF56HHO.png");
+                背景重复:无重复;
+                背景位置x:中心;
+                背景-位置-y:中心;
+                背景尺寸:63PX 63PX            
             } 
-            .play-icons {
+.游戏图标 {
 			
-                width: 100%;
-                height: 100%;
-                position: absolute;
-                //object-fit: cover; 
-                background-position: 50% 50%;
-                top: 0px;
-                left: 0px;
-                opacity: 0;
-                transition: opacity 0s;
-                background: url("https://s21.ax1x.com/2024/03/26/pF5claF.png"); 
-                background-repeat: no-repeat;
-                background-position-x: center;
-                background-position-y: center;
-                background-size: 80px 80px            
+                宽度:100%;
+                高度:100%;
+                位置:绝对的;
+//对象拟合:覆盖;
+                背景位置:50% 50%;
+                顶端:0PX;
+                左:0PX;
+                不透明度:0;
+                过渡:不透明度 0s;
+                背景:URL("https://s21.ax1x.com/2024/03/26/pF5claF.png");
+                背景重复:无重复;
+                背景位置x:中心;
+                背景-位置-y:中心;
+                背景尺寸:80PX 80PX            
             }      
-			.progress {
-			            position: fixed;
-			            right: 0;
-			            bottom: 0;
-			            width: 100%;
-			            height: 0px;/*进度条高度*/
-			            background-color: #ddd;
+.进步 {
+			            位置:确定的;
+			            正确的:0;
+			            底部:0;
+			            宽度:100%;
+			            高度:0PX;/*进度条高度*/
+			            背景色：#ddd；
 			            z-index: 110;
 			        }
 			        .progress-bar {
@@ -624,9 +624,9 @@ function FullScreen() {
 		    let xjj_time = localStorage.getItem('xjj_time');
 		    if (xjj_time !== time || null === xjj_time) {
 		        localStorage.setItem('xjj_time', time);
-		        var xjj = 'hiker://files/Jm/xjj.html';
-		        var file = 'http://hiker.nokia.press/hikerule/rulelist.json?id=6938&auth=fa2f2a42-f2b4-51d4-b05e-6f9a2b4c74bc';
-		        var gx = '2024.05.01，新增一套源，退出重进，才能看到更新效果。欢迎使用。';
+		        var xjj = 'hiker://files/Jm/file/xjj.html';
+		        var file = 'https://raw.gitmirror.com/jmeng123/files/main/xjj.html';
+var gx='2025.03.01，新增一套源，退出重进，才能看到更新效果。欢迎使用。'；
 		        if (request(file) != request(xjj)) {
 		            fba.writeFile(本地, request(file));
 		            $$$().x5LazyRule((yc) => {
