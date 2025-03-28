@@ -97,4 +97,4 @@ function sign(params) {
     let r = RegExp(/[\\/+]/g);
     res = res.replace(r, '');
     return res;
-}
+};
