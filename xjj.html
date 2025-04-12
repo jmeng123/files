@@ -48,7 +48,7 @@
                 background-repeat: no-repeat;
                 background-position-x: center;
                 background-position-y: center;
-                background-size: 63px 63px            
+                background-size: 63px 63px;            
             } 
             .play-icons {
 			
@@ -65,7 +65,7 @@
                 background-repeat: no-repeat;
                 background-position-x: center;
                 background-position-y: center;
-                background-size: 80px 80px            
+                background-size: 80px 80px;            
             }      
 			.progress {
 			            position: fixed;
@@ -129,18 +129,18 @@
 			        }
 			#options {			
 			  display: none;
-			  transform: translate(0%, 18%);/*上下左右移动*/
+			  transform: translate(0%, 10%);/*上下左右移动*/
 			  flex-wrap: wrap;
 			  gap: 8px; /*设置分类间距*/
 			}
 			
 			.option {
-  width: 52px; /*按钮宽度 */
-			  height: 16px; /*按钮高度 */
+              width: 52px; /*按钮宽度*/
+			  height: 16px; /*按钮高度*/
 			  padding: 10px; /*按钮大小*/
-			  font-size: 13px; /*字体大小 */
+			  font-size: 13px; /*字体大小*/
 			  border: 0px solid #ddd; /*按钮边框的像素，颜色，样式*/
-			 background-color: #ddd;/*按钮的颜色*/
+			 background-color: #ddd; /*按钮的颜色*/
               display: flex;
               margin-top: 10px;
               margin-left: 10px;
@@ -286,7 +286,7 @@
 		            buttons.style.opacity = 0;
 		            playicon.style.opacity = 0; 
 		         // playicons.style.opacity = 0; 
-		        }, 1250);
+		        }, 1500);
 	playicons.style.opacity = 0;     
     player.play();
 	   } else {	   
@@ -326,10 +326,10 @@
   }, {
       name: "质量",
       url: "https://tucdn.wpon.cn/api-girl/index.php?wpon=url",
-  }, /*{
-      name: "快手",
-      url: "http://119.91.196.247:7778/xjj/ksget.php?_t=0" + Math.random(),
-  }, */{
+  }, {
+      name: "爱看",
+      url: "https://api.microku.cn/api/cutie",
+  }, {
       name: "性感",
       url: "https://api.qqsuu.cn/api/dm-xjj?apiKey=5766419f45855dcbef647ae6d42f80e9",
   }, {
@@ -339,17 +339,8 @@
       name: "维梦",
       url: "https://api.52vmy.cn/api/video/girl?type=text",
   }, {
-      name: "芷儿",
-      url: "https://api.xn--ei1aa.cn/API/ks_new.php?type=text&up=%E5%B0%8F%E8%8A%B7%E5%84%BF",
-  }, {
-      name: "落樱",
-      url: "https://api.xn--ei1aa.cn/API/ks_new.php?type=text&up=%E8%90%BD%E6%A8%B1%E9%85%B1",
-  }, {
       name: "闺闺",
       url: "https://api.cenguigui.cn/api/mp4/MP4_xiaojiejie.php?type=text",
-  }, {
-      name: "苏苏",
-      url: "https://api.xn--ei1aa.cn/API/ks_new.php?type=text",
   }, {
       name: "夏柔",
       url: "https://tucdn.wpon.cn/api-girl/index.php?wpon=url",
@@ -357,8 +348,8 @@
       name: "大米",
       url: "https://api.qqsuu.cn/api/dm-xjj2",
   }, {
-      name: "酷美",
-      url: "https://api.kuleu.com/api/MP4_xiaojiejie",
+      name: "莓妹",
+      url: "http://apis.cmvip.cn/api/mp4/?username=1875954491&action=bf&type=Yuli莓妹",
   }, {
       name: "素颜",
       url: "https://api.suyanw.cn/api/xjj/api.php",
@@ -369,6 +360,30 @@
       name: "慢摇",
       url: "http://xjj2.716888.xyz/fenlei/zj/manyao/manyao.php",
   }, {
+      name: "漫摇",
+      url: "http://api.szcyyds.icu/api/yy?type=my",
+  }, {
+      name: "蛮腰",
+      url: "https://api.xhtke.cn/api/my",
+  }, {
+      name: "黑丝",
+      url: "https://api.xhtke.cn/api/hs",
+  }, {
+      name: "JK",
+      url: "https://api.xhtke.cn/api/jkv",
+  }, {
+      name: "远梦",
+      url: "http://api.mmp.cc/api/shortvideo?type=mp4",
+  }, {
+      name: "小小",
+      url: "https://v2.xxapi.cn/api/meinv",
+  }, {
+      name: "美女",
+      url: "https://onexiaolaji.cn/RandomPicture/api/api-video.php",
+  }, {
+      name: "墨音",
+      url: "http://api.szcyyds.icu/api/yy?type=xjj",
+  }, {
       name: "热舞",
       url: "http://xjj2.716888.xyz/fenlei/zj/rewu/rewu.php",
   }, {
@@ -377,9 +392,18 @@
   }, {
       name: "少富",
       url: "https://api.7645.cn/video/",
+  }, {
+      name: "遇见",
+      url: "http://api.yujn.cn/api/zzxjj.php",
+  }, {
+      name: "芒果",
+      url: "https://tools.mgtv100.com/external/v1/pear/xjj",
+  }, {
+      name: "高品",
+      url: "https://api.nuoyo.cn/api/jgzlxjjsp?type=mp4",
   }];
   		               
-		               var id = ["jgzlxjjsp","jkloli","gzlmy","tianmei","gzldd","xjjrw","cgzlxjjsp","cysp","flyhsp"];
+		               /*var id = ["jgzlxjjsp","jkloli","gzlmy","tianmei","gzldd","xjjrw","cgzlxjjsp","cysp","flyhsp"];
 		               var list = ["超品","萝莉","摇摆","甜妹","吊带","舞蹈","品质","欲梦","诱惑"];
 		               
 list.forEach((t, i) => {
@@ -387,7 +411,7 @@ list.forEach((t, i) => {
         name: t,
         url: "https://api.nuoyo.cn/api/"+id[i]+"?type=mp4",
     });
-});                             
+});*/                             
 		            var name = localStorage.getItem('xjj_name');
 		           if(null === name) {
 		                name = '极致';
@@ -398,7 +422,7 @@ list.forEach((t, i) => {
 		            options[index].name = '<span style="color:red">' + options[index].name + '</span>';
 		            var optionsHtml = "";
 		            options.forEach(function(option) {
-		                optionsHtml += "<div class='option'>" + option.name + "<span class='url' data-url='" + option.url + "'></span></div>";
+		                optionsHtml += "<div class='option'>" + option.name + "<span class='url' data-url=" + option.url + "></span></div>";
 		            });
 		           		            
 		            document.getElementById("options").style.display ='flex';
@@ -438,23 +462,26 @@ list.forEach((t, i) => {
 
 function players() {
     var url = localStorage.getItem('xjj_url');
-if(null === url) {
-    url = 'https://p.txqq.pro/api/girls?limit=1';
+if(url === null) {
+    var url = 'https://p.txqq.pro/api/girls?limit=1';
 }; 
-  if (/t=0|\.mp4|wudada|7645|suyanw|kuleu|ovoe|hhlqilongzhu|qqsuu|iqfk|716888|nuoyo/.test(url)) {
-    url = url.replace('ssss', Math.floor(Math.random()*678+1));
+  if (
+  /\.(mp4)$/.test(url) || 
+  /t=0/.test(url) || 
+  /\b(178v|mmp|xhtke|cmvip|yujn|szcyyds|wudada|7645|suyanw|kuleu|ovoe|hhlqilongzhu|qqsuu|iqfk|716888|nuoyo)\b/.test(url)
+) {
+    data = url;
         $("#myVideo").attr("src", url);
-    } else if (/treason|52vmy|xn--ei1aa|cenguigui|qvqa/.test(url)) {
-        getJSON(url.replace(/\\/g,""));
+    } else if (/treason|52vmy|cenguigui|qvqa/.test(url)) {
+        getJSON(url);
     } else {
         $.get(url, function(data, status) {
             if (status == status) {
-            
-                if (/txqq/.test(url)) {
-                    data = data.match(/.*(http.*?\.mp4)/)[1].replace(/\\/g,"");                 
+                if (/txqq|microku|onexiaolaji/.test(url)) {
+                    data = data.match(/.*(http.*?\.mp4)/)[1];
                 }
-                if (/meinv|pearktrue/.test(url)) {
-                    data = (data.video || data.url || data.data || data.data.url).replace(/\\/g,""); 
+                if (/mgtv100|meinv|xxapi|pearktrue/.test(url)) {
+                    data = data.video || data.url || data.data; 
                 }
                 if (!data.startsWith("http")) {
                     data = "http:" + data;
@@ -542,16 +569,16 @@ function FullScreen() {
 		                    console.log("向上！");
 		                    players()
 		                    break;
+		                case 2:
+		                    console.log("向下！");
+		                    downloadVideo()
+		                    break;
 		                /*case 3:
 		                    console.log("向左！");
 		                    players()
 		                    break;
 		                case 4:
 		                    console.log("向右！");
-		                    players()
-		                    break;
-		                case 2:
-		                    console.log("向下！");
 		                    players()
 		                    break;*/
 		            }
@@ -560,7 +587,19 @@ function FullScreen() {
 	const progressBar = document.getElementById('progress-bar');
 		    const timeDiv = document.getElementById('time-div');
 		    const timeDivs = document.getElementById('time-divs');	
-		    player = document.getElementById("myVideo");	  
+		    player = document.getElementById("myVideo");
+
+function downloadVideo() {
+    var videoUrl = document.getElementById("myVideo").src;
+    if (videoUrl) {
+            var a = document.createElement('a');
+            a.href = videoUrl;
+            a.download = 'video.mp4';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            }            
+}	  
 		
 	player.addEventListener('loadedmetadata', () => {
     const duration = player.duration;
@@ -615,28 +654,5 @@ function FullScreen() {
 		    }
 		    
 	</script> 
-  <script>
-		eval(fy_bridge_app.getInternalJs());
-		    window.request = window.request00 || window.request;
-		    let time = new Date().getDate().toString();
-		    //log(time)
-		    
-		    let xjj_time = localStorage.getItem('xjj_time');
-		    if (xjj_time !== time || null === xjj_time) {
-		        localStorage.setItem('xjj_time', time);
-		        var xjj = 'hiker://files/Jm/file/xjj.html';
-		        var file = 'https://raw.gitmirror.com/jmeng123/files/main/xjj.html';
-		        var gx = '2025.03.01，新增一套源，退出重进，才能看到更新效果。欢迎使用。';
-		        if (request(file) != request(xjj)) {
-		            fba.writeFile(本地, request(file));
-		            $$$().x5LazyRule((yc) => {
-		                confirm({
-		                    title: '更新完成',
-		                    content: yc.match(/gx = '(.*)'/)[1]
-		                })
-		            }, request(file))
-		        }
-		    }
-	</script>  
  </body>
 </html>
