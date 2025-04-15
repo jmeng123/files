@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body, html {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            font-family: 'Arial', sans-serif;
+        }
+        
+        .video-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 100;
+        }
+        
+        video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .controls-container {
+            position: fixed;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            z-index: 200;
+        }
+        
+        .control-button {
+            background-color: rgba(0, 0, 0, 0.5);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 5px 10px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        
+        .control-button:hover {
+            background-color: rgba(0, 0, 0, 0.7);
+        }
+        
+        .dropdown {
+            position: relative;
+            display: inline-block;
+        }
+        
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            top: -90px;
+            left: -60px;
+            background-color: rgba(0, 0, 0, 0.5);
+            min-width: max-content;
+            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+            z-index: 1;
+            border-radius: 5px;
+        }
+        
+        .dropdown-content a {
+            color: white;
+            padding: 12px 16px;
+            text-decoration: none;
+            display: block;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        
+        .dropdown-content a:hover {
+            background-color: rgba(0, 0, 0, 0.7);
+        }
+    </style>
+</head>
+<body>
+    <div class="video-container">
+        <video id="videoPlayer" controls></video>
+        <div class="controls-container">
+            <div class="dropdown">
+                <button class="control-button" id="toggleDropdown">切换</button>
+                <div class="dropdown-content">
+                    <a href="#" data-interface="interface1">靓女</a>
+                    <a href="#" data-interface="interface2">看看</a>
+                    <a href="#" data-interface="interface3">少富</a>
+                </div>
+            </div>
+            <button class="control-button" id="playModeButton">循环</button>
+        </div>
+    </div>
+
+    <script>
+        // 接口列表
+        const interfaces = {
+            interface1: [
+                "https://api.qqsuu.cn/api/dm-xjj?apiKey=5766419f45855dcbef647ae6d42f80e9",
+                "https://www.hhlqilongzhu.cn/api/MP4_xiaojiejie.php",
+                "http://api.mmp.cc/api/shortvideo?type=mp4",
+                "https://jx.iqfk.top/api/sjsp.php",
+                "https://www.wudada.online/Api/NewSp",
+                "https://api.suyanw.cn/api/xjj/api.php",
+                "https://api.suyanw.cn/api/kysp.php?lx=",
+                "http://api.szcyyds.icu/api/yy?type=my",
+                "http://xjj2.716888.xyz/fenlei/zj/manyao/manyao.php",
+                "http://xjj2.716888.xyz/fenlei/zj/rewu/rewu.php",
+                "http://xjj2.716888.xyz/fenlei/zj/wanmeisc/wanmeisc.php",
+                "http://api.yujn.cn/api/zzxjj.php"
+            ],
+            interface2: [
+                "https://api.xhtke.cn/api/jkv",
+                "https://api.xhtke.cn/api/hs",
+                "https://api.xhtke.cn/api/my",
+                "https://api.qqsuu.cn/api/dm-xjj2"
+            ],
+            interface3: [
+                "https://jiejie.uk/xjj/get/video.php?_t=" + Date.now(),
+                "https://api.7645.cn/video/"
+            ]
+        };
+
+        // 默认接口
+        const defaultInterface = "interface1";
+        let currentInterface = localStorage.getItem("currentInterface") || defaultInterface;
+        let currentVideoIndex = 0;
+        let isLoopPlayback = true;
+        let videoList = interfaces[currentInterface];
+
+        // 设置视频源
+        function setVideoSource() {
+            const video = document.getElementById('videoPlayer');
+            video.src = videoList[currentVideoIndex];
+            video.load();
+            video.play();
+        }
+
+        // 初始化视频
+        setVideoSource();
+
+        // 监听视频播放结束事件
+        document.getElementById('videoPlayer').addEventListener('ended', function() {
+            if (isLoopPlayback) {
+                const video = document.getElementById('videoPlayer');
+                video.currentTime = 0;
+                video.play();
+            } else {
+                currentVideoIndex = (currentVideoIndex + 1) % videoList.length;
+                setVideoSource();
+            }
+        });
+
+        // 监听视频加载错误
+        document.getElementById('videoPlayer').addEventListener('error', function() {
+            setVideoSource();
+        });
+
+        // 上滑切换视频
+        let touchStartY = 0;
+        let touchEndY = 0;
+
+        document.addEventListener('touchstart', function(e) {
+            touchStartY = e.touches[0].clientY;
+        });
+
+        document.addEventListener('touchend', function(e) {
+            touchEndY = e.changedTouches[0].clientY;
+            const swipeThreshold = 50;
+            if (touchStartY - touchEndY > swipeThreshold) {
+                currentVideoIndex = (currentVideoIndex + 1) % videoList.length;
+                setVideoSource();
+            }
+        });
+
+        // 点击播放/暂停
+        document.getElementById('videoPlayer').addEventListener('click', function() {
+            const video = document.getElementById('videoPlayer');
+            if (video.paused) {
+                video.play();
+            } else {
+                video.pause();
+            }
+        });
+
+        // 播放模式切换按钮
+        document.getElementById('playModeButton').addEventListener('click', function() {
+            isLoopPlayback = !isLoopPlayback;
+            this.textContent = isLoopPlayback ? '循环' : '连续';
+        });
+
+        // 接口选择
+        function switchInterface(interfaceName) {
+            currentInterface = interfaceName;
+            localStorage.setItem("currentInterface", currentInterface);
+            videoList = interfaces[currentInterface];
+            currentVideoIndex = 0;
+            setVideoSource();
+            document.querySelector('.dropdown-content').style.display = 'none';
+        }
+
+        // 为所有接口链接添加点击事件
+        document.querySelectorAll('.dropdown-content a').forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                switchInterface(this.getAttribute('data-interface'));
+            });
+        });
+
+        // 显示/隐藏弹窗
+        document.getElementById('toggleDropdown').addEventListener('click', function(e) {
+            e.stopPropagation();
+            const dropdownContent = document.querySelector('.dropdown-content');
+            dropdownContent.style.display = dropdownContent.style.display === 'block' ? 'none' : 'block';
+        });
+
+        // 点击页面其他地方关闭弹窗
+        document.addEventListener('click', function() {
+            document.querySelector('.dropdown-content').style.display = 'none';
+        });
+        
+        // 京梦：2025-04-15 制作更新
+    </script>
+</body>
+</html>
