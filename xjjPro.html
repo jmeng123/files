@@ -57,11 +57,6 @@
             background-color: rgba(0, 0, 0, 0.7);
         }
         
-        .dropdown {
-            position: relative;
-            display: inline-block;
-        }
-        
         .dropdown-content {
             display: none;
             position: absolute;
@@ -92,13 +87,11 @@
     <div class="video-container">
         <video id="videoPlayer" controls></video>
         <div class="controls-container">
-            <div class="dropdown">
-                <button class="control-button" id="toggleDropdown">切换</button>
-                <div class="dropdown-content">
-                    <a href="#" data-interface="interface1">靓女</a>
-                    <a href="#" data-interface="interface2">看看</a>
-                    <a href="#" data-interface="interface3">少富</a>
-                </div>
+            <button class="control-button" id="toggleDropdown">切换</button>
+            <div class="dropdown-content">
+                <a href="#" data-interface="interface1">靓女</a>
+                <a href="#" data-interface="interface2">看看</a>
+                <a href="#" data-interface="interface3">少富</a>
             </div>
             <button class="control-button" id="playModeButton">循环</button>
         </div>
@@ -111,10 +104,8 @@
                 "https://api.qqsuu.cn/api/dm-xjj?apiKey=5766419f45855dcbef647ae6d42f80e9",
                 "https://www.hhlqilongzhu.cn/api/MP4_xiaojiejie.php",
                 "http://api.mmp.cc/api/shortvideo?type=mp4",
-                "https://jx.iqfk.top/api/sjsp.php",
                 "https://www.wudada.online/Api/NewSp",
-                "https://api.suyanw.cn/api/xjj/api.php",
-                "https://api.suyanw.cn/api/kysp.php?lx=",
+                "https://api.suyanw.cn/api/kysp.php",
                 "http://api.szcyyds.icu/api/yy?type=my",
                 "http://xjj2.716888.xyz/fenlei/zj/manyao/manyao.php",
                 "http://xjj2.716888.xyz/fenlei/zj/rewu/rewu.php",
@@ -125,10 +116,12 @@
                 "https://api.xhtke.cn/api/jkv",
                 "https://api.xhtke.cn/api/hs",
                 "https://api.xhtke.cn/api/my",
+                "https://jx.iqfk.top/api/sjsp.php",
                 "https://api.qqsuu.cn/api/dm-xjj2"
             ],
             interface3: [
                 "https://jiejie.uk/xjj/get/video.php?_t=" + Date.now(),
+                "https://api.suyanw.cn/api/xjj/api.php",
                 "https://api.7645.cn/video/"
             ]
         };
@@ -154,9 +147,8 @@
         // 监听视频播放结束事件
         document.getElementById('videoPlayer').addEventListener('ended', function() {
             if (isLoopPlayback) {
-                const video = document.getElementById('videoPlayer');
-                video.currentTime = 0;
-                video.play();
+                this.currentTime = 0;
+                this.play();
             } else {
                 currentVideoIndex = (currentVideoIndex + 1) % videoList.length;
                 setVideoSource();
@@ -165,21 +157,19 @@
 
         // 监听视频加载错误
         document.getElementById('videoPlayer').addEventListener('error', function() {
+            currentVideoIndex = (currentVideoIndex + 1) % videoList.length;
             setVideoSource();
         });
 
         // 上滑切换视频
         let touchStartY = 0;
-        let touchEndY = 0;
-
         document.addEventListener('touchstart', function(e) {
             touchStartY = e.touches[0].clientY;
         });
 
         document.addEventListener('touchend', function(e) {
-            touchEndY = e.changedTouches[0].clientY;
-            const swipeThreshold = 50;
-            if (touchStartY - touchEndY > swipeThreshold) {
+            const touchEndY = e.changedTouches[0].clientY;
+            if (touchStartY - touchEndY > 50) {
                 currentVideoIndex = (currentVideoIndex + 1) % videoList.length;
                 setVideoSource();
             }
@@ -187,11 +177,10 @@
 
         // 点击播放/暂停
         document.getElementById('videoPlayer').addEventListener('click', function() {
-            const video = document.getElementById('videoPlayer');
-            if (video.paused) {
-                video.play();
+            if (this.paused) {
+                this.play();
             } else {
-                video.pause();
+                this.pause();
             }
         });
 
@@ -208,7 +197,6 @@
             videoList = interfaces[currentInterface];
             currentVideoIndex = 0;
             setVideoSource();
-            document.querySelector('.dropdown-content').style.display = 'none';
         }
 
         // 为所有接口链接添加点击事件
@@ -231,7 +219,7 @@
             document.querySelector('.dropdown-content').style.display = 'none';
         });
         
-        // 京梦：2025-04-15 制作更新
+        // 京梦 2025-04-15 制作更新
     </script>
 </body>
 </html>
