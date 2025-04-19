@@ -35,13 +35,14 @@
         
         .controls-container {
             position: fixed;
-            right: 10px;
+            right: -100px;
             top: 50%;
             transform: translateY(-50%);
             display: flex;
             flex-direction: column;
             gap: 20px;
             z-index: 200;
+            transition: right 0.3s ease;
         }
         
         .control-button {
@@ -110,15 +111,16 @@
 
         .update-popup {
             position: fixed;
-            top: 0;
-            left: -100%;
-            width: 80%;
+            top: -100%;
+            left: 0;
+            width: 100%;
             height: 100%;
-            background-color: rgba(0, 0, 0, 0.8);
+            background-color: rgba(0, 0, 0, 0.5); /* 半透明背景 */
             color: white;
             padding: 20px;
             z-index: 250;
-            transition: left 0.3s ease;
+            transition: top 0.3s ease;
+            overflow-y: auto;
         }
 
         .update-popup h2 {
@@ -152,7 +154,7 @@
 <body>
     <div class="video-container">
         <video id="videoPlayer" controls></video>
-        <div class="controls-container">
+        <div class="controls-container" id="controlsContainer">
             <button class="control-button" id="toggleDropdown">切换</button>
             <div class="dropdown-content">
                 <a href="#" data-interface="interface1">靓女</a>
@@ -403,29 +405,56 @@
             effectsDropdown.style.display = 'none';
         });
 
-        // 更新内容弹窗
-        let touchStartX = 0;
-        let touchEndX = 0;
+        // 下滑显示更新内容弹窗
+        let touchStartYPopup = 0;
+        let touchEndYPopup = 0;
 
         document.addEventListener('touchstart', function(e) {
-            touchStartX = e.touches[0].clientX;
+            touchStartYPopup = e.touches[0].clientY;
         });
 
         document.addEventListener('touchend', function(e) {
-            touchEndX = e.changedTouches[0].clientX;
-            if (touchEndX - touchStartX > 100) { 
+            touchEndYPopup = e.changedTouches[0].clientY;
+            if (touchEndYPopup - touchStartYPopup > 100) { 
                 showUpdatePopup();
             }
         });
 
         function showUpdatePopup() {
             const updatePopup = document.getElementById('updatePopup');
-            updatePopup.style.left = '0';
+            updatePopup.style.top = '0'; // 显示弹窗
         }
 
         document.getElementById('closeUpdatePopup').addEventListener('click', function() {
             const updatePopup = document.getElementById('updatePopup');
-            updatePopup.style.left = '-100%';
+            updatePopup.style.top = '-100%'; // 隐藏弹窗
+        });
+
+
+        // 左滑显示按钮
+        let isControlsVisible = false;
+        let touchStartX = 0;
+
+        const controlsContainer = document.getElementById('controlsContainer');
+
+        document.addEventListener('touchstart', function(e) {
+            touchStartX = e.touches[0].clientX;
+        });
+
+        document.addEventListener('touchend', function(e) {
+            const touchEndX = e.changedTouches[0].clientX;
+
+            // 左滑显示按钮
+            if (touchEndX - touchStartX < -50 && !isControlsVisible) {
+                controlsContainer.style.right = '10px';
+                isControlsVisible = true;
+            }
+
+            // 右滑隐藏按钮
+            if (touchEndX - touchStartX > 50 && isControlsVisible) {
+                controlsContainer.style.right = '-100px';
+                isControlsVisible = false;
+            }
         });
     </script>
 </body>
