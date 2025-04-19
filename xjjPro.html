@@ -107,6 +107,47 @@
         .effects-dropdown a:hover {
             background-color: rgba(0, 0, 0, 0.7);
         }
+
+        /* 更新内容弹窗样式 */
+        .update-popup {
+            position: fixed;
+            top: 0;
+            left: -100%; /* 初始隐藏在左侧 */
+            width: 80%; /* 弹窗宽度 */
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 20px;
+            z-index: 250;
+            transition: left 0.3s ease;
+        }
+
+        .update-popup h2 {
+            margin-bottom: 15px;
+        }
+
+        .update-popup ul {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        .update-popup ul li {
+            margin-bottom: 10px;
+        }
+
+        .update-popup button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin-top: 20px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .update-popup button:hover {
+            background-color: #45a049;
+        }
     </style>
 </head>
 <body>
@@ -129,14 +170,26 @@
         </div>
     </div>
 
+    <!-- 更新内容弹窗 -->
+    <div class="update-popup" id="updatePopup">
+        <h2>更新内容</h2>
+        <ul>
+            <li>作者：京梦</li>
+            <li>更新于：2025-04-18</li>
+            <li>1. 修复了部分视频无法加载的问题</li>
+            <li>2. 优化了视频切换的过渡效果</li>
+            <li>3. 增加了视频特效功能</li>
+        </ul>
+        <button id="closeUpdatePopup">关闭</button>
+    </div>
+
     <script>
-        // 接口列表
+        // 接口列表 - 只保留HTTP链接
         const interfaces = {
             interface1: [
                 "https://www.hhlqilongzhu.cn/api/MP4_xiaojiejie.php",
                 "http://api.mmp.cc/api/shortvideo?type=mp4",
                 "https://www.wudada.online/Api/NewSp",
-                /*"https://api.suyanw.cn/api/kysp.php?lx=女神",*/
                 "http://api.szcyyds.icu/api/yy?type=my",
                 "http://xjj2.716888.xyz/fenlei/zj/manyao/manyao.php",
                 "http://xjj2.716888.xyz/fenlei/zj/rewu/rewu.php",
@@ -173,7 +226,7 @@
                 "https://v2.xxapi.cn/api/meinv?return=302",
                 "https://api.kuleu.com/api/MP4_xiaojiejie?type=mp4",
                 "http://sucyan.cfd/api/video/?msg=%E9%AB%98%E8%B4%A8%E5%B0%8F%E5%A7%90%E5%A7%90",
-                "http://sucyan.cfd/api/video/?msg=jk",
+                "http://sucyan.cfd/api/video/?msg=jk"
             ],
             interface2: [
                 "https://api.xhtke.cn/api/jkv",
@@ -348,7 +401,31 @@
             document.querySelector('.dropdown-content').style.display = 'none';
             effectsDropdown.style.display = 'none';
         });
-        // 京梦：2025-04-16 制作更新
+
+        // 更新内容弹窗
+        let touchStartX = 0;
+        let touchEndX = 0;
+
+        document.addEventListener('touchstart', function(e) {
+            touchStartX = e.touches[0].clientX;
+        });
+
+        document.addEventListener('touchend', function(e) {
+            touchEndX = e.changedTouches[0].clientX;
+            if (touchEndX - touchStartX > 100) { 
+                showUpdatePopup();
+            }
+        });
+
+        function showUpdatePopup() {
+            const updatePopup = document.getElementById('updatePopup');
+            updatePopup.style.left = '0'; // 显示弹窗
+        }
+
+        document.getElementById('closeUpdatePopup').addEventListener('click', function() {
+            const updatePopup = document.getElementById('updatePopup');
+            updatePopup.style.left = '-100%'; // 隐藏弹窗
+        });
     </script>
 </body>
 </html>
