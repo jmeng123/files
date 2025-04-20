@@ -115,7 +115,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0, 0, 0, 0.5); /* 半透明背景 */
+            background-color: rgba(0, 0, 0, 0.5);
             color: white;
             padding: 20px;
             z-index: 250;
@@ -152,17 +152,29 @@
     </style>
 </head>
 <body>
+    <!-- 视频容器 -->
     <div class="video-container">
         <video id="videoPlayer" controls></video>
+        
+        <!-- 控制按钮容器 -->
         <div class="controls-container" id="controlsContainer">
+            <!-- 切换接口按钮 -->
             <button class="control-button" id="toggleDropdown">切换</button>
+            
+            <!-- 接口下拉菜单 -->
             <div class="dropdown-content">
                 <a href="#" data-interface="interface1">靓女</a>
                 <a href="#" data-interface="interface2">看看</a>
                 <a href="#" data-interface="interface3">少富</a>
             </div>
+            
+            <!-- 播放模式按钮 -->
             <button class="control-button" id="playModeButton">连续</button>
+            
+            <!-- 特效按钮 -->
             <button class="control-button" id="effectsButton">特效</button>
+            
+            <!-- 特效下拉菜单 -->
             <div class="effects-dropdown" id="effectsDropdown">
                 <a href="#" data-effect="grayscale">灰度</a>
                 <a href="#" data-effect="vintage">复古</a>
@@ -199,7 +211,7 @@
     </div>
 
     <script>
-        // 接口列表
+        // 定义接口列表
         const interfaces = {
             interface1: [
                 "https://www.hhlqilongzhu.cn/api/MP4_xiaojiejie.php",
@@ -246,6 +258,7 @@
                 "https://api.xhtke.cn/api/jkv",
                 "https://api.xhtke.cn/api/hs",
                 "https://api.xhtke.cn/api/my",
+                "https://jx.iqfk.top/api/sjsp.php",
                 "https://api.xhtke.cn/api/ny",
                 "https://api.xhtke.cn/api/ycyy",
                 "https://api.xhtke.cn/api/qc",
@@ -257,8 +270,7 @@
                 "https://api.xhtke.cn/api/dd",
                 "https://api.xhtke.cn/api/cqng",
                 "https://api.qqsuu.cn/api/dm-xjj?apiKey=5766419f45855dcbef647ae6d42f80e9",
-                "https://api.qqsuu.cn/api/dm-xjj2",
-                "https://jx.iqfk.top/api/sjsp.php"
+                "https://api.qqsuu.cn/api/dm-xjj2"
             ],
             interface3: [
                 "https://jiejie.uk/xjj/get/video.php?_t=" + Date.now(),
@@ -470,3 +482,4 @@
     </script>
 </body>
 </html>
+
