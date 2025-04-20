@@ -59,7 +59,7 @@
             background-color: rgba(0, 0, 0, 0.7);
         }
         
-        .dropdown-content {
+        .dropdown-content, .effects-dropdown {
             display: none;
             position: absolute;
             top: -90px;
@@ -71,7 +71,7 @@
             border-radius: 5px;
         }
         
-        .dropdown-content a {
+        .dropdown-content a, .effects-dropdown a {
             color: white;
             padding: 12px 16px;
             text-decoration: none;
@@ -80,32 +80,7 @@
             font-size: 12px;
         }
         
-        .dropdown-content a:hover {
-            background-color: rgba(0, 0, 0, 0.7);
-        }
-        
-        .effects-dropdown {
-            display: none;
-            position: absolute;
-            top: -2px;
-            left: -60px;
-            background-color: rgba(0, 0, 0, 0.5);
-            min-width: max-content;
-            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
-            z-index: 1;
-            border-radius: 5px;
-        }
-        
-        .effects-dropdown a {
-            color: white;
-            padding: 12px 16px;
-            text-decoration: none;
-            display: block;
-            cursor: pointer;
-            font-size: 12px;
-        }
-        
-        .effects-dropdown a:hover {
+        .dropdown-content a:hover, .effects-dropdown a:hover {
             background-color: rgba(0, 0, 0, 0.7);
         }
 
@@ -189,29 +164,29 @@
         <ul>
             <li>作者：京梦</li>
             <li>2025-04-20</li>
-            <li>1. 更新内容改为下滑显示并调整为透明窗口</li>
-            <li>2. 新增左滑显示/右滑隐藏按钮功能</li>
+            <li>1更新内容改为下滑显示并调整为透明窗口</li>
+            <li>新增左滑显示/右滑隐藏按钮功能</li>
             <li>2025-04-19</li>
-            <li>1. 新增多个视频类型接口</li>
-            <li>2. 新增历史更新内容窗口</li>
+            <li>新增多个视频类型接口</li>
+            <li>新增历史更新内容窗口</li>
             <li>2025-04-18</li>
-            <li>1. 新增特效，提升质感，使观看更舒服</li>
-            <li>2. 新增预加载功能，视频切换更为流畅</li>
-            <li>3. 新增视频加载失败时，自动重新加载</li>
+            <li>新增特效，提升质感，使观看更舒服</li>
+            <li>新增预加载功能，视频切换更为流畅</li>
+            <li>新增视频加载失败时，自动重新加载</li>
             <li>2025-04-17</li>
-            <li>1. 修改接口分组名称为(靓女/看看/少富)</li>
-            <li>2. 调整分组内的接口，确保功能一致</li>
-            <li>3. 说明：看看分组仅供观看，不能下载</li>
+            <li>修改接口分组名称为(靓女/看看/少富)</li>
+            <li>调整分组内的接口，确保功能一致</li>
+            <li>说明：看看分组仅供观看，不能下载</li>
             <li>2025-04-16</li>
-            <li>1. 新增上滑切换视频功能</li>
-            <li>2. 新增切换接口分组的按钮</li>
-            <li>3. 新增播放模式按钮，点击循环或连续</li>
+            <li>新增上滑切换视频功能</li>
+            <li>新增切换接口分组的按钮</li>
+            <li>新增播放模式按钮，点击循环或连续</li>
         </ul>
         <button id="closeUpdatePopup">关闭</button>
     </div>
 
     <script>
-        // 定义接口列表
+        // 接口列表
         const interfaces = {
             interface1: [
                 "https://www.hhlqilongzhu.cn/api/MP4_xiaojiejie.php",
@@ -257,7 +232,7 @@
             interface2: [
                 "https://api.xhtke.cn/api/jkv",
                 "https://api.xhtke.cn/api/hs",
-                "https://api.xhtke.cn/api/my",                
+                "https://api.xhtke.cn/api/my",
                 "https://api.xhtke.cn/api/ny",
                 "https://api.xhtke.cn/api/ycyy",
                 "https://api.xhtke.cn/api/qc",
@@ -286,7 +261,8 @@
         let currentVideoIndex = 0;
         let isLoopPlayback = false;
         let videoList = interfaces[currentInterface];
-        let nextVideo = null;
+        let preloadQueue = []; // 预加载队列
+        const preloadCount = 3; // 同时预加载的视频数量
 
         // 特效参数
         const effects = {
@@ -295,31 +271,52 @@
             grain: 'contrast(105%) brightness(102%) saturate(105%)'
         };
 
+        // 初始化预加载队列
+        function initPreloadQueue() {
+            preloadQueue = [];
+            for (let i = 0; i < Math.min(preloadCount, videoList.length); i++) {
+                if (i !== currentVideoIndex) {
+                    preloadVideo(videoList[i]);
+                }
+            }
+        }
+
+        // 预加载视频
+        function preloadVideo(src) {
+            return new Promise((resolve, reject) => {
+                const video = document.createElement('video');
+                video.src = src;
+                video.preload = 'auto';
+                video.crossOrigin = 'anonymous';
+                
+                video.addEventListener('loadeddata', () => {
+                    resolve(video);
+                });
+                
+                video.addEventListener('error', () => {
+                    reject(src);
+                });
+                
+                video.load();
+            });
+        }
+
         // 设置视频源
-        function setVideoSource() {
+        async function setVideoSource() {
             const video = document.getElementById('videoPlayer');
             video.src = videoList[currentVideoIndex];
             video.load();
 
-            video.addEventListener('canplaythrough', function() {
-                preloadNextVideo();
+            video.addEventListener('canplaythrough', async function() {
+                await initPreloadQueue();
                 video.play().catch(error => console.log('自动播放被阻止', error));
                 applyEffect(defaultEffect);
             });
         }
 
-        // 预加载下一个视频
-        function preloadNextVideo() {
-            const nextIndex = (currentVideoIndex + 1) % videoList.length;
-            if (nextVideo) {
-                nextVideo.src = '';
-                nextVideo = null;
-            }
-            nextVideo = document.createElement('video');
-            nextVideo.src = videoList[nextIndex];
-            nextVideo.preload = 'auto';
-            nextVideo.crossOrigin = 'anonymous';
-            nextVideo.load();
+        // 获取下一个视频
+        function getNextVideo() {
+            return preloadQueue.find(video => video.src === videoList[(currentVideoIndex + 1) % videoList.length]);
         }
 
         // 初始化视频
@@ -453,7 +450,6 @@
             updatePopup.style.top = '-100%';
         });
 
-
         // 左滑显示按钮
         let isControlsVisible = false;
         let touchStartX = 0;
@@ -482,4 +478,3 @@
     </script>
 </body>
 </html>
-
