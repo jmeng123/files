@@ -161,7 +161,7 @@
                 <a href="#" data-interface="interface2">看看</a>
                 <a href="#" data-interface="interface3">少富</a>
             </div>
-            <button class="control-button" id="playModeButton">循环</button>
+            <button class="control-button" id="playModeButton">连续</button>
             <button class="control-button" id="effectsButton">特效</button>
             <div class="effects-dropdown" id="effectsDropdown">
                 <a href="#" data-effect="grayscale">灰度</a>
@@ -231,7 +231,6 @@
                 "https://api.s01s.cn/API/bssp/",
                 "https://v2.xxapi.cn/api/meinv?return=302",
                 "https://api.kuleu.com/api/MP4_xiaojiejie?type=mp4",
-                "http://sucyan.cfd/api/video/?msg=%E9%AB%98%E8%B4%A8%E5%B0%8F%E5%A7%90%E5%A7%90",
                 "http://sucyan.cfd/api/video/?msg=jk"
             ],
             interface2: [
@@ -264,7 +263,7 @@
         let currentInterface = localStorage.getItem("currentInterface") || defaultInterface;
         let defaultEffect = localStorage.getItem("defaultEffect") || "grain";
         let currentVideoIndex = 0;
-        let isLoopPlayback = true;
+        let isLoopPlayback = false;
         let videoList = interfaces[currentInterface];
         let nextVideo = null;
 
@@ -425,12 +424,12 @@
 
         function showUpdatePopup() {
             const updatePopup = document.getElementById('updatePopup');
-            updatePopup.style.top = '0'; // 显示弹窗
+            updatePopup.style.top = '0';
         }
 
         document.getElementById('closeUpdatePopup').addEventListener('click', function() {
             const updatePopup = document.getElementById('updatePopup');
-            updatePopup.style.top = '-100%'; // 隐藏弹窗
+            updatePopup.style.top = '-100%';
         });
 
 
