@@ -87,7 +87,7 @@
         .effects-dropdown {
             display: none;
             position: absolute;
-            top: 40px;
+            top: 0px;
             left: -60px;
             background-color: rgba(0, 0, 0, 0.5);
             min-width: max-content;
@@ -152,29 +152,18 @@
     </style>
 </head>
 <body>
-    <!-- 视频容器 -->
     <div class="video-container">
-        <video id="videoPlayer" controls></video>
-        
-        <!-- 控制按钮容器 -->
+        <video id="videoPlayer" controls></video>        
         <div class="controls-container" id="controlsContainer">
-            <!-- 切换接口按钮 -->
-            <button class="control-button" id="toggleDropdown">切换</button>
-            
-            <!-- 接口下拉菜单 -->
+            <button class="control-button" id="toggleDropdown">切换</button>           
             <div class="dropdown-content">
                 <a href="#" data-interface="interface1">靓女</a>
                 <a href="#" data-interface="interface2">看看</a>
                 <a href="#" data-interface="interface3">少富</a>
-            </div>
-            
-            <!-- 播放模式按钮 -->
-            <button class="control-button" id="playModeButton">连续</button>
-            
-            <!-- 特效按钮 -->
+            </div>            
+            <button class="control-button" id="playModeButton">连续</button>           
             <button class="control-button" id="effectsButton">特效</button>
-            
-            <!-- 特效下拉菜单 -->
+           
             <div class="effects-dropdown" id="effectsDropdown">
                 <a href="#" data-effect="grayscale">灰度</a>
                 <a href="#" data-effect="vintage">复古</a>
@@ -183,7 +172,6 @@
         </div>
     </div>
 
-    <!-- 更新内容弹窗 -->
     <div class="update-popup" id="updatePopup">
         <h2>更新内容</h2>
         <ul>
@@ -213,8 +201,7 @@
     <script>
         // 接口列表
         const interfaces = {
-            interface1: [
-                "https://www.hhlqilongzhu.cn/api/MP4_xiaojiejie.php",
+            interface1: [                
                 "http://api.mmp.cc/api/shortvideo?type=mp4",
                 "https://www.wudada.online/Api/NewSp",
                 "http://api.szcyyds.icu/api/yy?type=my",
@@ -286,8 +273,8 @@
         let currentVideoIndex = 0;
         let isLoopPlayback = false;
         let videoList = interfaces[currentInterface];
-        let preloadQueue = []; // 预加载队列
-        const preloadCount = 3; // 同时预加载的视频数量
+        let preloadQueue = [];
+        const preloadCount = 5;
 
         // 特效参数
         const effects = {
