@@ -40,7 +40,7 @@
             transform: translateY(-50%);
             display: flex;
             flex-direction: column;
-            gap: 20px;
+            gap: 15px;
             z-index: 200;
             transition: right 0.3s ease;
         }
@@ -49,10 +49,10 @@
             background-color: rgba(0, 0, 0, 0.5);
             color: white;
             border: none;
-            border-radius: 5px;
-            padding: 5px 10px;
+            border-radius: 15px;
+            padding: 8px 12px;
             cursor: pointer;
-            font-size: 12px;
+            font-size: 11px;
         }
         
         .control-button:hover {
@@ -68,16 +68,16 @@
             min-width: max-content;
             box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
             z-index: 1;
-            border-radius: 5px;
+            border-radius: 15px;
         }
         
         .dropdown-content a {
             color: white;
-            padding: 12px 16px;
+            padding: 10px 14px;
             text-decoration: none;
             display: block;
             cursor: pointer;
-            font-size: 12px;
+            font-size: 11px;
         }
         
         .dropdown-content a:hover {
@@ -87,22 +87,22 @@
         .effects-dropdown {
             display: none;
             position: absolute;
-            top: 0px;
+            top: 20px;
             left: -60px;
             background-color: rgba(0, 0, 0, 0.5);
             min-width: max-content;
             box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
             z-index: 1;
-            border-radius: 5px;
+            border-radius: 15px;
         }
         
         .effects-dropdown a {
             color: white;
-            padding: 12px 16px;
+            padding: 10px 14px;
             text-decoration: none;
             display: block;
             cursor: pointer;
-            font-size: 12px;
+            font-size: 11px;
         }
         
         .effects-dropdown a:hover {
@@ -140,9 +140,9 @@
             background-color: #4CAF50;
             color: white;
             border: none;
-            padding: 10px 20px;
+            padding: 8px 16px;
             margin-top: 20px;
-            border-radius: 5px;
+            border-radius: 12px;
             cursor: pointer;
         }
 
@@ -201,13 +201,12 @@
     <script>
         // 接口列表
         const interfaces = {
-            interface1: [                
+            interface1: [
                 "http://api.mmp.cc/api/shortvideo?type=mp4",
                 "https://www.wudada.online/Api/NewSp",
                 "http://api.szcyyds.icu/api/yy?type=my",
                 "http://xjj2.716888.xyz/fenlei/zj/manyao/manyao.php",
                 "http://xjj2.716888.xyz/fenlei/zj/rewu/rewu.php",
-                "http://xjj2.716888.xyz/fenlei/zj/wanmeisc/wanmeisc.php",
                 "http://api.yujn.cn/api/zzxjj.php",
                 "https://api.s01s.cn/API/lmtj/",
                 "https://api.s01s.cn/API/fhtj2/",
@@ -274,7 +273,7 @@
         let isLoopPlayback = false;
         let videoList = interfaces[currentInterface];
         let preloadQueue = [];
-        const preloadCount = 5;
+        const preloadCount = 3; // 预加载3个视频
 
         // 特效参数
         const effects = {
@@ -287,9 +286,7 @@
         function initPreloadQueue() {
             preloadQueue = [];
             for (let i = 0; i < Math.min(preloadCount, videoList.length); i++) {
-                if (i !== currentVideoIndex) {
-                    preloadVideo(videoList[i]);
-                }
+                preloadVideo(videoList[i]);
             }
         }
 
@@ -301,7 +298,7 @@
                 video.preload = 'auto';
                 video.crossOrigin = 'anonymous';
                 
-                video.addEventListener('loadeddata', () => {
+                video.addEventListener('loadedmetadata', () => {
                     resolve(video);
                 });
                 
@@ -328,7 +325,8 @@
 
         // 获取下一个视频
         function getNextVideo() {
-            return preloadQueue.find(video => video.src === videoList[(currentVideoIndex + 1) % videoList.length]);
+            const nextIndex = (currentVideoIndex + 1) % videoList.length;
+            return preloadQueue.find(video => video.src === videoList[nextIndex]);
         }
 
         // 初始化视频
