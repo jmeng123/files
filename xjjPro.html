@@ -200,37 +200,6 @@
                 "http://xjj2.716888.xyz/fenlei/zj/manyao/manyao.php",
                 "http://xjj2.716888.xyz/fenlei/zj/rewu/rewu.php",
                 "http://api.yujn.cn/api/zzxjj.php",
-                "https://api.s01s.cn/API/lmtj/",
-                "https://api.s01s.cn/API/fhtj2/",
-                "https://api.s01s.cn/API/qcxl/",
-                "https://api.s01s.cn/API/sbkl/",
-                "https://api.s01s.cn/API/cqng/",
-                "https://api.s01s.cn/API/wmsc/",
-                "https://api.s01s.cn/API/ndxs/",
-                "https://api.s01s.cn/API/myxl/",
-                "https://api.s01s.cn/API/gjzs/",
-                "https://api.s01s.cn/API/hbss/",
-                "https://api.s01s.cn/API/llxl/",
-                "https://api.s01s.cn/API/ndym/",
-                "https://api.s01s.cn/API/slxl/",
-                "https://api.s01s.cn/API/sqxl/",
-                "https://api.s01s.cn/API/tmxl/",
-                "https://api.s01s.cn/API/kdbz/",
-                "https://api.s01s.cn/API/mhyx/",
-                "https://api.s01s.cn/API/ycyy/",
-                "https://api.s01s.cn/API/zyxl/",
-                "https://api.s01s.cn/API/xjjsp/",
-                "https://api.s01s.cn/API/jpyz/",
-                "https://api.s01s.cn/API/luoli/",
-                "https://api.s01s.cn/API/hssp/",
-                "https://api.s01s.cn/API/fhtj/",
-                "https://api.s01s.cn/API/jk_shipin/",
-                "https://api.s01s.cn/API/lsp_meinv/",
-                "https://api.s01s.cn/API/mvsp/",
-                "https://api.s01s.cn/API/bssp/",
-                "https://v2.xxapi.cn/api/meinv?return=302",
-                "https://api.kuleu.com/api/MP4_xiaojiejie?type=mp4",
-                "http://sucyan.cfd/api/video/?msg=jk",
                 "https://api.7645.cn/video/index.php",
                 "https://api.7645.cn/video/index.php?type=girl_video&id=" + Math.floor(Math.random() * 6000) + 1
             ],
@@ -266,8 +235,6 @@
         let currentVideoIndex = 0;
         let isLoopPlayback = false;
         let videoList = interfaces[currentInterface];
-        let preloadQueue = [];
-        const preloadCount = 3; // 预加载3个视频
 
         // 特效参数
         const effects = {
@@ -276,51 +243,51 @@
             grain: 'contrast(105%) brightness(102%) saturate(105%)'
         };
 
-        // 初始化预加载队列
-        function initPreloadQueue() {
-            preloadQueue = [];
-            for (let i = 0; i < Math.min(preloadCount, videoList.length); i++) {
-                preloadVideo(videoList[i]);
-            }
-        }
-
-        // 预加载视频
-        function preloadVideo(src) {
-            return new Promise((resolve, reject) => {
-                const video = document.createElement('video');
-                video.src = src;
-                video.preload = 'auto';
-                video.crossOrigin = 'anonymous';
-                
-                video.addEventListener('loadedmetadata', () => {
-                    resolve(video);
-                });
-                
-                video.addEventListener('error', () => {
-                    reject(src);
-                });
-                
-                video.load();
-            });
-        }
+        // 当前加载的视频请求
+        let currentLoadRequest = null;
 
         // 设置视频源
         async function setVideoSource() {
             const video = document.getElementById('videoPlayer');
+            
+            // 清除之前的加载请求
+            if (currentLoadRequest) {
+                clearTimeout(currentLoadRequest);
+            }
+            
+            // 设置新视频源
             video.src = videoList[currentVideoIndex];
             video.load();
 
-            video.addEventListener('canplaythrough', async function() {
-                await initPreloadQueue();
-                video.play().catch(error => console.log('自动播放被阻止', error));
-                applyEffect(defaultEffect);
+            // 启动超时计时器
+            currentLoadRequest = setTimeout(() => {
+                currentVideoIndex = (currentVideoIndex + 1) % videoList.length;
+                setVideoSource();
+            }, 3000); // 3秒超时
+
+            // 监听加载完成
+            video.addEventListener('canplaythrough', handleVideoLoad, { once: true });
+            
+            // 尝试自动播放
+            video.play().catch(error => {
+                console.log('自动播放被阻止', error);
+                // 如果自动播放失败，移除播放控制
+                video.removeAttribute('controls');
             });
         }
 
-        // 获取下一个视频
-        function getNextVideo() {
-            const nextIndex = (currentVideoIndex + 1) % videoList.length;
-            return preloadQueue.find(video => video.src === videoList[nextIndex]);
+        // 处理视频加载
+        function handleVideoLoad() {
+            const video = document.getElementById('videoPlayer');
+            
+            // 清除加载计时器
+            if (currentLoadRequest) {
+                clearTimeout(currentLoadRequest);
+                currentLoadRequest = null;
+            }
+            
+            // 应用特效
+            applyEffect(defaultEffect);
         }
 
         // 初始化视频
@@ -339,6 +306,12 @@
 
         // 监听视频加载错误
         document.getElementById('videoPlayer').addEventListener('error', function() {
+            // 清除加载计时器
+            if (currentLoadRequest) {
+                clearTimeout(currentLoadRequest);
+                currentLoadRequest = null;
+            }
+            
             currentVideoIndex = (currentVideoIndex + 1) % videoList.length;
             setVideoSource();
         });
