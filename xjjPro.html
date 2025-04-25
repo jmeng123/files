@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>小姐姐视频</title>
     <style>
         * {
             margin: 0;
@@ -87,7 +88,7 @@
         .effects-dropdown {
             display: none;
             position: absolute;
-            top: 20px;
+            top: 18px;
             left: -60px;
             background-color: rgba(0, 0, 0, 0.5);
             min-width: max-content;
@@ -149,9 +150,40 @@
         .update-popup button:hover {
             background-color: #45a049;
         }
+
+        /* 加载动画样式 */
+        .loading-animation {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 1);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
     </style>
 </head>
 <body>
+    <div class="loading-animation" id="loadingAnimation">
+        <div class="spinner"></div>
+    </div>
+
     <div class="video-container">
         <video id="videoPlayer" controls></video>        
         <div class="controls-container" id="controlsContainer">
@@ -176,22 +208,23 @@
         <h2>更新内容</h2>
         <ul>
             <li>作者：京梦</li>
+            <li>说明：看看不能下载视频</li>
+            <li>2025-04-25</li>
+            <li>新增加载动画</li>
+            <li>移除预加载，增加加载超时</li>
             <li>2025-04-20</li>
             <li>更新内容改为下滑显示并调整为透明窗口</li>
             <li>新增手势操作，左滑显示/右滑隐藏按钮</li>
-            <li>2025-04-19</li>
+            <li>2025-04-18</li>
             <li>新增多个视频类型接口</li>
             <li>新增历史更新内容窗口</li>
-            <li>2025-04-18</li>
-            <li>新增特效，提升质感，使观看更舒服</li>
-            <li>新增预加载功能，视频切换更为流畅</li>
-            <li>新增视频加载失败时，自动重新加载</li>
+            <li>新增特效，提升质感，使观看更舒服</li>     
         </ul>
         <button id="closeUpdatePopup">关闭</button>
     </div>
 
     <script>
-        // 接口列表
+        // 接口列表（只保留链接）
         const interfaces = {
             interface1: [
                 "http://api.mmp.cc/api/shortvideo?type=mp4",
@@ -199,8 +232,10 @@
                 "http://api.szcyyds.icu/api/yy?type=my",
                 "http://xjj2.716888.xyz/fenlei/zj/manyao/manyao.php",
                 "http://xjj2.716888.xyz/fenlei/zj/rewu/rewu.php",
-                "http://api.yujn.cn/api/zzxjj.php",
-                "https://api.7645.cn/video/index.php",
+                "http://api.yujn.cn/api/zzxjj.php",                
+                "https://v2.xxapi.cn/api/meinv?return=302",
+                "https://api.kuleu.com/api/MP4_xiaojiejie?type=mp4",
+                "http://sucyan.cfd/api/video/?msg=jk",
                 "https://api.7645.cn/video/index.php?type=girl_video&id=" + Math.floor(Math.random() * 6000) + 1
             ],
             interface2: [
@@ -223,7 +258,6 @@
             ],
             interface3: [
                 "https://jiejie.uk/xjj/get/video.php?_t=" + Date.now(),
-                "https://api.suyanw.cn/api/xjj/api.php",
                 "https://api.7645.cn/video/"
             ]
         };
@@ -243,136 +277,57 @@
             grain: 'contrast(105%) brightness(102%) saturate(105%)'
         };
 
-        // 当前加载的视频请求
-        let currentLoadRequest = null;
+        // 获取DOM元素
+        const videoPlayer = document.getElementById('videoPlayer');
+        const loadingAnimation = document.getElementById('loadingAnimation');
+        const controlsContainer = document.getElementById('controlsContainer');
+        const toggleDropdown = document.getElementById('toggleDropdown');
+        const dropdownContent = document.querySelector('.dropdown-content');
+        const playModeButton = document.getElementById('playModeButton');
+        const effectsButton = document.getElementById('effectsButton');
+        const effectsDropdown = document.getElementById('effectsDropdown');
+        const updatePopup = document.getElementById('updatePopup');
+        const closeUpdatePopup = document.getElementById('closeUpdatePopup');
 
         // 设置视频源
-        async function setVideoSource() {
-            const video = document.getElementById('videoPlayer');
-            
-            // 清除之前的加载请求
-            if (currentLoadRequest) {
-                clearTimeout(currentLoadRequest);
-            }
-            
-            // 设置新视频源
-            video.src = videoList[currentVideoIndex];
-            video.load();
+        function setVideoSource() {
+            videoPlayer.src = videoList[currentVideoIndex];
+            videoPlayer.load();
 
-            // 启动超时计时器
-            currentLoadRequest = setTimeout(() => {
-                currentVideoIndex = (currentVideoIndex + 1) % videoList.length;
-                setVideoSource();
-            }, 3000); // 3秒超时
+            // 显示加载动画
+            loadingAnimation.style.display = 'flex';
 
-            // 监听加载完成
-            video.addEventListener('canplaythrough', handleVideoLoad, { once: true });
-            
-            // 尝试自动播放
-            video.play().catch(error => {
-                console.log('自动播放被阻止', error);
-                // 如果自动播放失败，移除播放控制
-                video.removeAttribute('controls');
-            });
+            // 移除之前的事件监听器
+            videoPlayer.removeEventListener('canplaythrough', handleCanPlayThrough);
+            videoPlayer.removeEventListener('error', handleError);
+
+            // 添加新的事件监听器
+            videoPlayer.addEventListener('canplaythrough', handleCanPlayThrough);
+            videoPlayer.addEventListener('error', handleError);
         }
 
-        // 处理视频加载
-        function handleVideoLoad() {
-            const video = document.getElementById('videoPlayer');
-            
-            // 清除加载计时器
-            if (currentLoadRequest) {
-                clearTimeout(currentLoadRequest);
-                currentLoadRequest = null;
-            }
-            
-            // 应用特效
+        // 处理视频准备好播放
+        function handleCanPlayThrough() {
+            loadingAnimation.style.display = 'none';
+            videoPlayer.play().catch(error => console.log('自动播放被阻止', error));
             applyEffect(defaultEffect);
         }
 
-        // 初始化视频
-        setVideoSource();
-
-        // 监听视频播放结束事件
-        document.getElementById('videoPlayer').addEventListener('ended', function() {
-            if (isLoopPlayback) {
-                this.currentTime = 0;
-                this.play();
-            } else {
-                currentVideoIndex = (currentVideoIndex + 1) % videoList.length;
-                setVideoSource();
-            }
-        });
-
-        // 监听视频加载错误
-        document.getElementById('videoPlayer').addEventListener('error', function() {
-            // 清除加载计时器
-            if (currentLoadRequest) {
-                clearTimeout(currentLoadRequest);
-                currentLoadRequest = null;
-            }
-            
+        // 处理视频加载错误
+        function handleError() {
+            loadingAnimation.style.display = 'none';
             currentVideoIndex = (currentVideoIndex + 1) % videoList.length;
             setVideoSource();
-        });
-
-        // 上滑切换视频
-        let touchStartY = 0;
-        document.addEventListener('touchstart', function(e) {
-            touchStartY = e.touches[0].clientY;
-        });
-
-        document.addEventListener('touchend', function(e) {
-            const touchEndY = e.changedTouches[0].clientY;
-            if (touchStartY - touchEndY > 50) {
-                currentVideoIndex = (currentVideoIndex + 1) % videoList.length;
-                setVideoSource();
-            }
-        });
-
-        // 点击播放/暂停
-        document.getElementById('videoPlayer').addEventListener('click', function() {
-            if (this.paused) {
-                this.play();
-            } else {
-                this.pause();
-            }
-        });
-
-        // 播放模式切换按钮
-        document.getElementById('playModeButton').addEventListener('click', function() {
-            isLoopPlayback = !isLoopPlayback;
-            this.textContent = isLoopPlayback ? '循环' : '连续';
-        });
-
-        // 特效按钮和弹窗
-        const effectsButton = document.getElementById('effectsButton');
-        const effectsDropdown = document.getElementById('effectsDropdown');
-        
-        effectsButton.addEventListener('click', function(e) {
-            e.stopPropagation();
-            effectsDropdown.style.display = effectsDropdown.style.display === 'block' ? 'none' : 'block';
-        });
+        }
 
         // 应用特效
-        document.querySelectorAll('.effects-dropdown a').forEach(link => {
-            link.addEventListener('click', function(e) {
-                e.preventDefault();
-                const effect = this.getAttribute('data-effect');
-                applyEffect(effect);
-                effectsDropdown.style.display = 'none';
-            });
-        });
-
-        // 应用特效到视频
         function applyEffect(effect) {
-            const video = document.getElementById('videoPlayer');
-            video.style.filter = effects[effect];
+            videoPlayer.style.filter = effects[effect];
             defaultEffect = effect;
             localStorage.setItem("defaultEffect", effect);
         }
 
-        // 接口选择
+        // 切换接口
         function switchInterface(interfaceName) {
             currentInterface = interfaceName;
             localStorage.setItem("currentInterface", currentInterface);
@@ -381,77 +336,129 @@
             setVideoSource();
         }
 
-        // 为所有接口链接添加点击事件
-        document.querySelectorAll('.dropdown-content a').forEach(link => {
-            link.addEventListener('click', function(e) {
-                e.preventDefault();
-                switchInterface(this.getAttribute('data-interface'));
+        // 初始化页面
+        function initPage() {
+            setVideoSource();
+
+            // 监听视频播放结束事件
+            videoPlayer.addEventListener('ended', function() {
+                if (isLoopPlayback) {
+                    this.currentTime = 0;
+                    this.play();
+                } else {
+                    currentVideoIndex = (currentVideoIndex + 1) % videoList.length;
+                    setVideoSource();
+                }
             });
-        });
 
-        // 显示/隐藏弹窗
-        document.getElementById('toggleDropdown').addEventListener('click', function(e) {
-            e.stopPropagation();
-            const dropdownContent = document.querySelector('.dropdown-content');
-            dropdownContent.style.display = dropdownContent.style.display === 'block' ? 'none' : 'block';
-        });
+            // 点击视频播放/暂停
+            videoPlayer.addEventListener('click', function() {
+                if (this.paused) {
+                    this.play();
+                } else {
+                    this.pause();
+                }
+            });
 
-        // 点击页面其他地方关闭弹窗
-        document.addEventListener('click', function() {
-            document.querySelector('.dropdown-content').style.display = 'none';
-            effectsDropdown.style.display = 'none';
-        });
+            // 播放模式切换
+            playModeButton.addEventListener('click', function() {
+                isLoopPlayback = !isLoopPlayback;
+                this.textContent = isLoopPlayback ? '循环' : '连续';
+            });
 
-        // 下滑显示更新内容弹窗
-        let touchStartYPopup = 0;
-        let touchEndYPopup = 0;
+            // 特效按钮点击事件
+            effectsButton.addEventListener('click', function(e) {
+                e.stopPropagation();
+                effectsDropdown.style.display = effectsDropdown.style.display === 'block' ? 'none' : 'block';
+            });
 
-        document.addEventListener('touchstart', function(e) {
-            touchStartYPopup = e.touches[0].clientY;
-        });
+            // 特效点击事件
+            document.querySelectorAll('.effects-dropdown a').forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const effect = this.getAttribute('data-effect');
+                    applyEffect(effect);
+                    effectsDropdown.style.display = 'none';
+                });
+            });
 
-        document.addEventListener('touchend', function(e) {
-            touchEndYPopup = e.changedTouches[0].clientY;
-            if (touchEndYPopup - touchStartYPopup > 100) { 
-                showUpdatePopup();
-            }
-        });
+            // 接口切换点击事件
+            document.querySelectorAll('.dropdown-content a').forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    switchInterface(this.getAttribute('data-interface'));
+                });
+            });
 
-        function showUpdatePopup() {
-            const updatePopup = document.getElementById('updatePopup');
-            updatePopup.style.top = '0';
-        }
+            // 切换按钮点击事件
+            toggleDropdown.addEventListener('click', function(e) {
+                e.stopPropagation();
+                dropdownContent.style.display = dropdownContent.style.display === 'block' ? 'none' : 'block';
+            });
 
-        document.getElementById('closeUpdatePopup').addEventListener('click', function() {
-            const updatePopup = document.getElementById('updatePopup');
-            updatePopup.style.top = '-100%';
-        });
+            // 点击页面其他地方关闭弹窗
+            document.addEventListener('click', function() {
+                dropdownContent.style.display = 'none';
+                effectsDropdown.style.display = 'none';
+            });
 
-        // 左滑显示按钮
-        let isControlsVisible = false;
-        let touchStartX = 0;
+            // 下滑显示更新内容弹窗
+            let touchStartYPopup = 0;
+            let touchEndYPopup = 0;
 
-        const controlsContainer = document.getElementById('controlsContainer');
+            document.addEventListener('touchstart', function(e) {
+                touchStartYPopup = e.touches[0].clientY;
+            });
 
-        document.addEventListener('touchstart', function(e) {
-            touchStartX = e.touches[0].clientX;
-        });
+            document.addEventListener('touchend', function(e) {
+                touchEndYPopup = e.changedTouches[0].clientY;
+                if (touchEndYPopup - touchStartYPopup > 100) { 
+                    updatePopup.style.top = '0';
+                }
+            });
 
-        document.addEventListener('touchend', function(e) {
-            const touchEndX = e.changedTouches[0].clientX;
+            // 关闭更新弹窗
+            closeUpdatePopup.addEventListener('click', function() {
+                updatePopup.style.top = '-100%';
+            });
 
             // 左滑显示按钮
-            if (touchEndX - touchStartX < -50 && !isControlsVisible) {
-                controlsContainer.style.right = '10px';
-                isControlsVisible = true;
-            }
+            let touchStartX = 0;
+            let isControlsVisible = false;
 
-            // 右滑隐藏按钮
-            if (touchEndX - touchStartX > 50 && isControlsVisible) {
-                controlsContainer.style.right = '-100px';
-                isControlsVisible = false;
-            }
-        });
+            document.addEventListener('touchstart', function(e) {
+                touchStartX = e.touches[0].clientX;
+            });
+
+            document.addEventListener('touchend', function(e) {
+                const touchEndX = e.changedTouches[0].clientX;
+                if (touchEndX - touchStartX < -50 && !isControlsVisible) {
+                    controlsContainer.style.right = '10px';
+                    isControlsVisible = true;
+                }
+                if (touchEndX - touchStartX > 50 && isControlsVisible) {
+                    controlsContainer.style.right = '-100px';
+                    isControlsVisible = false;
+                }
+            });
+
+            // 上滑切换视频
+            let touchStartY = 0;
+            document.addEventListener('touchstart', function(e) {
+                touchStartY = e.touches[0].clientY;
+            });
+
+            document.addEventListener('touchend', function(e) {
+                const touchEndY = e.changedTouches[0].clientY;
+                if (touchStartY - touchEndY > 50) {
+                    currentVideoIndex = (currentVideoIndex + 1) % videoList.length;
+                    setVideoSource();
+                }
+            });
+        }
+
+        // 页面加载完成后初始化
+        window.addEventListener('load', initPage);
     </script>
 </body>
 </html>
