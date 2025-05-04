@@ -63,7 +63,7 @@
         .dropdown-content {
             display: none;
             position: absolute;
-            top: -90px;
+            top: -103px;
             left: -60px;
             background-color: rgba(0, 0, 0, 0.5);
             min-width: max-content;
@@ -88,7 +88,7 @@
         .effects-dropdown {
             display: none;
             position: absolute;
-            top: 18px;
+            top: 50px;
             left: -60px;
             background-color: rgba(0, 0, 0, 0.5);
             min-width: max-content;
@@ -151,7 +151,6 @@
             background-color: #45a049;
         }
 
-        /* 加载动画样式 */
         .loading-animation {
             position: fixed;
             top: 0;
@@ -192,6 +191,7 @@
                 <a href="#" data-interface="interface1">靓女</a>
                 <a href="#" data-interface="interface2">看看</a>
                 <a href="#" data-interface="interface3">少富</a>
+                <a href="#" data-interface="interface4">极致</a>
             </div>            
             <button class="control-button" id="playModeButton">连续</button>           
             <button class="control-button" id="effectsButton">特效</button>
@@ -209,9 +209,6 @@
         <ul>
             <li>作者：京梦</li>
             <li>说明：看看不能下载视频</li>
-            <li>2025-04-25</li>
-            <li>新增加载动画</li>
-            <li>移除预加载，增加加载超时</li>
             <li>2025-04-20</li>
             <li>更新内容改为下滑显示并调整为透明窗口</li>
             <li>新增手势操作，左滑显示/右滑隐藏按钮</li>
@@ -224,7 +221,6 @@
     </div>
 
     <script>
-        // 接口列表
         const interfaces = {
             interface1: [
                 "http://api.mmp.cc/api/shortvideo?type=mp4",
@@ -233,7 +229,6 @@
                 "http://xjj2.716888.xyz/fenlei/zj/manyao/manyao.php",
                 "http://xjj2.716888.xyz/fenlei/zj/rewu/rewu.php",
                 "http://api.yujn.cn/api/zzxjj.php",                
-                "https://v2.xxapi.cn/api/meinv?return=302",
                 "https://api.kuleu.com/api/MP4_xiaojiejie?type=mp4",
                 "http://sucyan.cfd/api/video/?msg=jk",
                 "https://api.7645.cn/video/index.php?type=girl_video&id=" + Math.floor(Math.random() * 6000) + 1
@@ -259,10 +254,14 @@
             interface3: [
                 "https://jiejie.uk/xjj/get/video.php?_t=" + Date.now(),
                 "https://api.7645.cn/video/"
+            ],
+            interface4: [
+                "https://p.txqq.pro/api/girls?limit=1",
+                "https://tucdn.wpon.cn/api-girl/index.php?wpon=json",
+                "https://v2.xxapi.cn/api/meinv"
             ]
         };
 
-        // 默认接口和特效
         const defaultInterface = "interface1";
         let currentInterface = localStorage.getItem("currentInterface") || defaultInterface;
         let defaultEffect = localStorage.getItem("defaultEffect") || "grain";
@@ -270,14 +269,12 @@
         let isLoopPlayback = false;
         let videoList = interfaces[currentInterface];
 
-        // 特效参数
         const effects = {
             grayscale: 'grayscale(50%)',
             vintage: 'sepia(30%) contrast(105%) brightness(102%) saturate(90%)',
             grain: 'contrast(105%) brightness(102%) saturate(105%)'
         };
 
-        // 获取DOM元素
         const videoPlayer = document.getElementById('videoPlayer');
         const loadingAnimation = document.getElementById('loadingAnimation');
         const controlsContainer = document.getElementById('controlsContainer');
@@ -289,45 +286,93 @@
         const updatePopup = document.getElementById('updatePopup');
         const closeUpdatePopup = document.getElementById('closeUpdatePopup');
 
-        // 设置视频源
         function setVideoSource() {
-            videoPlayer.src = videoList[currentVideoIndex];
-            videoPlayer.load();
+            if (currentInterface === 'interface4') {
+                fetch(videoList[currentVideoIndex])
+                    .then(response => response.json())
+                    .then(data => {
+                        let videoUrl = '';
+                        if (videoList[currentVideoIndex] === 'https://p.txqq.pro/api/girls?limit=1' && data.code === 0 && data.list && data.list.length > 0) {
+                            videoUrl = data.list[0].video_url;
+                        } else if (videoList[currentVideoIndex] === 'https://tucdn.wpon.cn/api-girl/index.php?wpon=json' && data.mp4) {
+                            videoUrl = 'https:' + data.mp4;
+                        } else if (videoList[currentVideoIndex] === 'https://v2.xxapi.cn/api/meinv' && data.data) {
+                            videoUrl = data.data;
+                        } else {
+                            currentVideoIndex = (currentVideoIndex + 1) % videoList.length;
+                            setVideoSource();
+                            return;
+                        }
 
-            // 显示加载动画
-            loadingAnimation.style.display = 'flex';
+                        videoPlayer.src = videoUrl;
+                        videoPlayer.load();
 
-            // 移除之前的事件监听器
-            videoPlayer.removeEventListener('canplaythrough', handleCanPlayThrough);
-            videoPlayer.removeEventListener('error', handleError);
+                        loadingAnimation.style.display = 'flex';
 
-            // 添加新的事件监听器
-            videoPlayer.addEventListener('canplaythrough', handleCanPlayThrough);
-            videoPlayer.addEventListener('error', handleError);
+                        const loadTimeout = setTimeout(() => {
+                            if (videoPlayer.src) {
+                                currentVideoIndex = (currentVideoIndex + 1) % videoList.length;
+                                setVideoSource();
+                            }
+                        }, 3000);
+
+                        videoPlayer.addEventListener('canplaythrough', function handleCanPlayThrough() {
+                            loadingAnimation.style.display = 'none';
+                            clearTimeout(loadTimeout);
+                            videoPlayer.play().catch(error => console.log('自动播放被阻止', error));
+                            applyEffect(defaultEffect);
+                            videoPlayer.removeEventListener('canplaythrough', handleCanPlayThrough);
+                        });
+
+                        videoPlayer.addEventListener('error', function handleError() {
+                            clearTimeout(loadTimeout);
+                            loadingAnimation.style.display = 'none';
+                            currentVideoIndex = (currentVideoIndex + 1) % videoList.length;
+                            setVideoSource();
+                            videoPlayer.removeEventListener('error', handleError);
+                        });
+                    })
+                    .catch(error => {
+                        currentVideoIndex = (currentVideoIndex + 1) % videoList.length;
+                        setVideoSource();
+                    });
+            } else {
+                videoPlayer.src = videoList[currentVideoIndex];
+                videoPlayer.load();
+
+                loadingAnimation.style.display = 'flex';
+
+                const loadTimeout = setTimeout(() => {
+                    if (videoPlayer.src) {
+                        currentVideoIndex = (currentVideoIndex + 1) % videoList.length;
+                        setVideoSource();
+                    }
+                }, 3000);
+
+                videoPlayer.addEventListener('canplaythrough', function handleCanPlayThrough() {
+                    loadingAnimation.style.display = 'none';
+                    clearTimeout(loadTimeout);
+                    videoPlayer.play().catch(error => console.log('自动播放被阻止', error));
+                    applyEffect(defaultEffect);
+                    videoPlayer.removeEventListener('canplaythrough', handleCanPlayThrough);
+                });
+
+                videoPlayer.addEventListener('error', function handleError() {
+                    clearTimeout(loadTimeout);
+                    loadingAnimation.style.display = 'none';
+                    currentVideoIndex = (currentVideoIndex + 1) % videoList.length;
+                    setVideoSource();
+                    videoPlayer.removeEventListener('error', handleError);
+                });
+            }
         }
 
-        // 处理视频准备好播放
-        function handleCanPlayThrough() {
-            loadingAnimation.style.display = 'none';
-            videoPlayer.play().catch(error => console.log('自动播放被阻止', error));
-            applyEffect(defaultEffect);
-        }
-
-        // 处理视频加载错误
-        function handleError() {
-            loadingAnimation.style.display = 'none';
-            currentVideoIndex = (currentVideoIndex + 1) % videoList.length;
-            setVideoSource();
-        }
-
-        // 应用特效
         function applyEffect(effect) {
             videoPlayer.style.filter = effects[effect];
             defaultEffect = effect;
             localStorage.setItem("defaultEffect", effect);
         }
 
-        // 切换接口
         function switchInterface(interfaceName) {
             currentInterface = interfaceName;
             localStorage.setItem("currentInterface", currentInterface);
@@ -336,11 +381,9 @@
             setVideoSource();
         }
 
-        // 初始化页面
         function initPage() {
             setVideoSource();
 
-            // 监听视频播放结束事件
             videoPlayer.addEventListener('ended', function() {
                 if (isLoopPlayback) {
                     this.currentTime = 0;
@@ -351,7 +394,6 @@
                 }
             });
 
-            // 点击视频播放/暂停
             videoPlayer.addEventListener('click', function() {
                 if (this.paused) {
                     this.play();
@@ -360,19 +402,16 @@
                 }
             });
 
-            // 播放模式切换
             playModeButton.addEventListener('click', function() {
                 isLoopPlayback = !isLoopPlayback;
                 this.textContent = isLoopPlayback ? '循环' : '连续';
             });
 
-            // 特效按钮点击事件
             effectsButton.addEventListener('click', function(e) {
                 e.stopPropagation();
                 effectsDropdown.style.display = effectsDropdown.style.display === 'block' ? 'none' : 'block';
             });
 
-            // 特效点击事件
             document.querySelectorAll('.effects-dropdown a').forEach(link => {
                 link.addEventListener('click', function(e) {
                     e.preventDefault();
@@ -382,7 +421,6 @@
                 });
             });
 
-            // 接口切换点击事件
             document.querySelectorAll('.dropdown-content a').forEach(link => {
                 link.addEventListener('click', function(e) {
                     e.preventDefault();
@@ -390,19 +428,16 @@
                 });
             });
 
-            // 切换按钮点击事件
             toggleDropdown.addEventListener('click', function(e) {
                 e.stopPropagation();
                 dropdownContent.style.display = dropdownContent.style.display === 'block' ? 'none' : 'block';
             });
 
-            // 点击页面其他地方关闭弹窗
             document.addEventListener('click', function() {
                 dropdownContent.style.display = 'none';
                 effectsDropdown.style.display = 'none';
             });
 
-            // 下滑显示更新内容弹窗
             let touchStartYPopup = 0;
             let touchEndYPopup = 0;
 
@@ -417,12 +452,10 @@
                 }
             });
 
-            // 关闭更新弹窗
             closeUpdatePopup.addEventListener('click', function() {
                 updatePopup.style.top = '-100%';
             });
 
-            // 左滑显示按钮
             let touchStartX = 0;
             let isControlsVisible = false;
 
@@ -442,7 +475,6 @@
                 }
             });
 
-            // 上滑切换视频
             let touchStartY = 0;
             document.addEventListener('touchstart', function(e) {
                 touchStartY = e.touches[0].clientY;
@@ -457,7 +489,6 @@
             });
         }
 
-        // 页面加载完成后初始化
         window.addEventListener('load', initPage);
     </script>
 </body>
