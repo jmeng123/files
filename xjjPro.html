@@ -231,9 +231,10 @@
                 "http://api.yujn.cn/api/zzxjj.php",                
                 "https://api.kuleu.com/api/MP4_xiaojiejie?type=mp4",
                 "http://sucyan.cfd/api/video/?msg=jk",
+                "https://api.7645.cn/video/index.php?type=girl_video&id=" + Math.floor(Math.random() * 6000) + 1,
                 "https://jkapi.com/api/ksmm?apiKey=4f4838704fd1c6919b0240a4866fd4a6",
                 "https://jkapi.com/api/xjj_video?apiKey=69b159635b2789ee4e3a807985090777",
-                "https://api.7645.cn/video/index.php?type=girl_video&id=" + Math.floor(Math.random() * 6000) + 1
+                "https://api.178v.cn/api/sjdyxjj/api.php?apikey=00da9d4a-3f91-bf3a-609b-052b6783c648c0ca2416"
             ],
             interface2: [
                 "https://api.xhtke.cn/api/jkv",
@@ -260,7 +261,8 @@
             interface4: [
                 "https://p.txqq.pro/api/girls?limit=1",
                 "https://tucdn.wpon.cn/api-girl/index.php?wpon=json",
-                "https://v2.xxapi.cn/api/meinv"
+                "https://v2.xxapi.cn/api/meinv",
+                "https://api.178v.cn/api/sjtm/api.php?apikey=b6fcc445-ee19-6632-2ba2-34cb4054c734144a2839"
             ]
         };
 
@@ -300,6 +302,8 @@
                             videoUrl = 'https:' + data.mp4;
                         } else if (videoList[currentVideoIndex] === 'https://v2.xxapi.cn/api/meinv' && data.data) {
                             videoUrl = data.data;
+                        } else if (videoList[currentVideoIndex] === 'https://api.178v.cn/api/sjtm/api.php?apikey=b6fcc445-ee19-6632-2ba2-34cb4054c734144a2839' && data.video) {
+                            videoUrl = data.video;
                         } else {
                             currentVideoIndex = (currentVideoIndex + 1) % videoList.length;
                             setVideoSource();
