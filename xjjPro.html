@@ -179,99 +179,102 @@
     </style>
 </head>
 <body>
-    <div class="loading-animation" id="loadingAnimation">
+    <div class="loading-animation" id="loading">
         <div class="spinner"></div>
     </div>
 
     <div class="video-container">
-        <video id="videoPlayer" controls></video>        
-        <div class="controls-container" id="controlsContainer">
-            <button class="control-button" id="toggleDropdown">切换</button>           
+        <video id="vidPlayer" controls></video>        
+        <div class="controls-container" id="controls">
+            <button class="control-button" id="toggleDrop">切换</button>           
             <div class="dropdown-content">
-                <a href="#" data-interface="interface1">靓女</a>
-                <a href="#" data-interface="interface2">看看</a>
-                <a href="#" data-interface="interface3">少富</a>
-                <a href="#" data-interface="interface4">极致</a>
+                <a href="#" data-type="beauty">靓女</a>
+                <a href="#" data-type="extreme">极致</a>
+                <a href="#" data-type="brilliance">靓丽</a>
+                <a href="#" data-type="wealth">少富</a>
             </div>            
-            <button class="control-button" id="playModeButton">连续</button>           
-            <button class="control-button" id="effectsButton">特效</button>
+            <button class="control-button" id="playModeBtn">连续</button>           
+            <button class="control-button" id="effectsBtn">特效</button>
            
-            <div class="effects-dropdown" id="effectsDropdown">
-                <a href="#" data-effect="grayscale">灰度</a>
-                <a href="#" data-effect="vintage">复古</a>
-                <a href="#" data-effect="grain">质感</a>
+            <div class="effects-dropdown" id="effectsDrop">
+                <a href="#" data-fx="grayscale">灰度</a>
+                <a href="#" data-fx="vintage">复古</a>
+                <a href="#" data-fx="grain">质感</a>
             </div>
         </div>
     </div>
 
-    <div class="update-popup" id="updatePopup">
+    <div class="update-popup" id="updatePop">
         <h2>更新内容</h2>
         <ul>
             <li>作者：京梦</li>
-            <li>说明：看看不能下载视频</li>
+            <li>2025-06-10</li>
+            <li>新增加载失败立即播放下一个</li>
+            <li>新增更新弹窗增加当前接口显示</li>
             <li>2025-04-20</li>
             <li>更新内容改为下滑显示并调整为透明窗口</li>
             <li>新增手势操作，左滑显示/右滑隐藏按钮</li>
             <li>2025-04-18</li>
             <li>新增多个视频类型接口</li>
             <li>新增历史更新内容窗口</li>
-            <li>新增特效，提升质感，使观看更舒服</li>     
+            <li>新增特效，提升质感，使观看更舒服</li>
+            <li id="currentUrlItem">当前接口: </li>
         </ul>
-        <button id="closeUpdatePopup">关闭</button>
+        <button id="closeUpdate">关闭</button>
     </div>
 
     <script>
-        const interfaces = {
-            interface1: [
-                "http://api.mmp.cc/api/shortvideo?type=mp4",
+        const urlGroups = {
+            beauty: [
+                "https://api.yuafeng.cn/API/ly/sjxl.php",
+                "https://api.yuafeng.cn/API/ly/yzxl.php",
+                "https://api.yuafeng.cn/API/ly/mhy.php",
+                "https://api.mmp.cc/api/shortvideo?type=mp4",
+                "https://api.mmp.cc/api/ksvideo?type=mp4",
+                "https://api.mmp.cc/api/ksvideo?type=mp4&id=jk",
+                "https://api.mmp.cc/api/ksvideo?type=mp4&id=GaoZhiLiangXiaoJieJie",
+                "https://api.mmp.cc/api/ksvideo?type=mp4&id=HeiSi",
+                "https://api.mmp.cc/api/ksvideo?type=mp4&id=ReWu",
                 "https://www.wudada.online/Api/NewSp",
                 "http://api.szcyyds.icu/api/yy?type=my",
                 "http://xjj2.716888.xyz/fenlei/zj/manyao/manyao.php",
                 "http://xjj2.716888.xyz/fenlei/zj/rewu/rewu.php",
-                "http://api.yujn.cn/api/zzxjj.php",                
+                "http://www.yujn.cn/api/zzxjj.php?type=video",
+                "http://www.yujn.cn/api/jksp.php?type=video",
+                "http://www.yujn.cn/api/heisis.php?type=video",
+                "http://www.yujn.cn/api/ndym.php?type=video",
+                "http://www.yujn.cn/api/yuzu.php?type=video",
+                "http://www.yujn.cn/api/sbkl.php?type=video",
+                "http://www.yujn.cn/api/nvgao.php?type=video",
+                "http://www.yujn.cn/api/shwd.php?type=video",
+                "http://www.yujn.cn/api/manyao.php",
                 "https://api.kuleu.com/api/MP4_xiaojiejie?type=mp4",
                 "http://sucyan.cfd/api/video/?msg=jk",
-                "https://api.7645.cn/video/index.php?type=girl_video&id=" + Math.floor(Math.random() * 6000) + 1,
+                "https://api.7645.cn/video/index.php?type=girl_video&id=",
                 "https://jkapi.com/api/ksmm?apiKey=4f4838704fd1c6919b0240a4866fd4a6",
                 "https://jkapi.com/api/xjj_video?apiKey=69b159635b2789ee4e3a807985090777",
                 "https://api.178v.cn/api/sjdyxjj/api.php?apikey=00da9d4a-3f91-bf3a-609b-052b6783c648c0ca2416"
             ],
-            interface2: [
-                "https://api.xhtke.cn/api/jkv",
-                "https://api.xhtke.cn/api/hs",
-                "https://api.xhtke.cn/api/my",
-                "https://api.xhtke.cn/api/ny",
-                "https://api.xhtke.cn/api/ycyy",
-                "https://api.xhtke.cn/api/qc",
-                "https://api.xhtke.cn/api/ndxs",
-                "https://api.xhtke.cn/api/mvsp",
-                "https://api.xhtke.cn/api/luoli",
-                "https://api.xhtke.cn/api/kad",
-                "https://api.xhtke.cn/api/heibai",
-                "https://api.xhtke.cn/api/dd",
-                "https://api.xhtke.cn/api/cqng",
-                "https://api.qqsuu.cn/api/dm-xjj?apiKey=5766419f45855dcbef647ae6d42f80e9",
-                "https://api.qqsuu.cn/api/dm-xjj2",
-                "https://jx.iqfk.top/api/sjsp.php"
+            extreme: [
+                "https://p.txqq.pro/api/girls?limit=1"
             ],
-            interface3: [
-                "https://jiejie.uk/xjj/get/video.php?_t=" + Date.now(),
-                "https://api.7645.cn/video/"
-            ],
-            interface4: [
-                "https://p.txqq.pro/api/girls?limit=1",
+            brilliance: [
                 "https://tucdn.wpon.cn/api-girl/index.php?wpon=json",
                 "https://v2.xxapi.cn/api/meinv",
                 "https://api.178v.cn/api/sjtm/api.php?apikey=b6fcc445-ee19-6632-2ba2-34cb4054c734144a2839"
+            ],
+            wealth: [
+                "https://jiejie.uk/xjj/get/video.php?_t=",
+                "https://api.7645.cn/video/"
             ]
         };
 
-        const defaultInterface = "interface1";
-        let currentInterface = localStorage.getItem("currentInterface") || defaultInterface;
-        let defaultEffect = localStorage.getItem("defaultEffect") || "grain";
-        let currentVideoIndex = 0;
-        let isLoopPlayback = false;
-        let videoList = interfaces[currentInterface];
+        const defaultGroup = "extreme";
+        let curGroup = localStorage.getItem("curGroup") || defaultGroup;
+        let curEffect = localStorage.getItem("curEffect") || "grain";
+        let vidIndex = 0;
+        let isLooping = false;
+        let vidUrls = urlGroups[curGroup];
 
         const effects = {
             grayscale: 'grayscale(50%)',
@@ -279,128 +282,185 @@
             grain: 'contrast(105%) brightness(102%) saturate(105%)'
         };
 
-        const videoPlayer = document.getElementById('videoPlayer');
-        const loadingAnimation = document.getElementById('loadingAnimation');
-        const controlsContainer = document.getElementById('controlsContainer');
-        const toggleDropdown = document.getElementById('toggleDropdown');
-        const dropdownContent = document.querySelector('.dropdown-content');
-        const playModeButton = document.getElementById('playModeButton');
-        const effectsButton = document.getElementById('effectsButton');
-        const effectsDropdown = document.getElementById('effectsDropdown');
-        const updatePopup = document.getElementById('updatePopup');
-        const closeUpdatePopup = document.getElementById('closeUpdatePopup');
+        const vidPlayer = document.getElementById('vidPlayer');
+        const loading = document.getElementById('loading');
+        const controls = document.getElementById('controls');
+        const toggleDrop = document.getElementById('toggleDrop');
+        const dropContent = document.querySelector('.dropdown-content');
+        const playModeBtn = document.getElementById('playModeBtn');
+        const effectsBtn = document.getElementById('effectsBtn');
+        const effectsDrop = document.getElementById('effectsDrop');
+        const updatePop = document.getElementById('updatePop');
+        const closeUpdate = document.getElementById('closeUpdate');
+        const currentUrlItem = document.getElementById('currentUrlItem');
 
-        function setVideoSource() {
-            if (currentInterface === 'interface4') {
-                fetch(videoList[currentVideoIndex])
-                    .then(response => response.json())
+        function setVidSrc() {
+            if (curGroup === 'brilliance') {
+                fetch(vidUrls[vidIndex])
+                    .then(res => res.json())
                     .then(data => {
-                        let videoUrl = '';
-                        if (videoList[currentVideoIndex] === 'https://p.txqq.pro/api/girls?limit=1' && data.code === 0 && data.list && data.list.length > 0) {
-                            videoUrl = data.list[0].video_url;
-                        } else if (videoList[currentVideoIndex] === 'https://tucdn.wpon.cn/api-girl/index.php?wpon=json' && data.mp4) {
-                            videoUrl = 'https:' + data.mp4;
-                        } else if (videoList[currentVideoIndex] === 'https://v2.xxapi.cn/api/meinv' && data.data) {
-                            videoUrl = data.data;
-                        } else if (videoList[currentVideoIndex] === 'https://api.178v.cn/api/sjtm/api.php?apikey=b6fcc445-ee19-6632-2ba2-34cb4054c734144a2839' && data.video) {
-                            videoUrl = data.video;
+                        let url = '';
+                        if (vidUrls[vidIndex] === "https://tucdn.wpon.cn/api-girl/index.php?wpon=json" && data.mp4) {
+                            url = 'https:' + data.mp4;
+                        } else if (vidUrls[vidIndex] === "https://v2.xxapi.cn/api/meinv" && data.data) {
+                            url = data.data;
+                        } else if (vidUrls[vidIndex] === "https://api.178v.cn/api/sjtm/api.php?apikey=b6fcc445-ee19-6632-2ba2-34cb4054c734144a2839" && data.video) {
+                            url = data.video;
                         } else {
-                            currentVideoIndex = (currentVideoIndex + 1) % videoList.length;
-                            setVideoSource();
+                            vidIndex = (vidIndex + 1) % vidUrls.length;
+                            setVidSrc();
                             return;
                         }
 
-                        videoPlayer.src = videoUrl;
-                        videoPlayer.load();
+                        vidPlayer.src = url;
+                        vidPlayer.load();
 
-                        loadingAnimation.style.display = 'flex';
+                        loading.style.display = 'flex';
 
-                        const loadTimeout = setTimeout(() => {
-                            if (videoPlayer.src) {
-                                currentVideoIndex = (currentVideoIndex + 1) % videoList.length;
-                                setVideoSource();
+                        const loadTimer = setTimeout(() => {
+                            if (vidPlayer.src) {
+                                vidIndex = (vidIndex + 1) % vidUrls.length;
+                                setVidSrc();
                             }
-                        }, 3000);
+                        }, 2000);
 
-                        videoPlayer.addEventListener('canplaythrough', function handleCanPlayThrough() {
-                            loadingAnimation.style.display = 'none';
-                            clearTimeout(loadTimeout);
-                            videoPlayer.play().catch(error => console.log('自动播放被阻止', error));
-                            applyEffect(defaultEffect);
-                            videoPlayer.removeEventListener('canplaythrough', handleCanPlayThrough);
+                        vidPlayer.addEventListener('canplaythrough', function handleReady() {
+                            loading.style.display = 'none';
+                            clearTimeout(loadTimer);
+                            vidPlayer.play().catch(error => console.log('Auto-play blocked', error));
+                            applyEffect(curEffect);
+                            vidPlayer.removeEventListener('canplaythrough', handleReady);
                         });
 
-                        videoPlayer.addEventListener('error', function handleError() {
-                            clearTimeout(loadTimeout);
-                            loadingAnimation.style.display = 'none';
-                            currentVideoIndex = (currentVideoIndex + 1) % videoList.length;
-                            setVideoSource();
-                            videoPlayer.removeEventListener('error', handleError);
+                        vidPlayer.addEventListener('error', function handleError() {
+                            clearTimeout(loadTimer);
+                            loading.style.display = 'none';
+                            vidIndex = (vidIndex + 1) % vidUrls.length;
+                            setVidSrc();
+                            vidPlayer.removeEventListener('error', handleError);
                         });
                     })
                     .catch(error => {
-                        currentVideoIndex = (currentVideoIndex + 1) % videoList.length;
-                        setVideoSource();
+                        vidIndex = (vidIndex + 1) % vidUrls.length;
+                        setVidSrc();
+                    });
+            } else if (curGroup === 'extreme') {
+                fetch(vidUrls[vidIndex])
+                    .then(res => res.json())
+                    .then(data => {
+                        let url = '';
+                        if (vidUrls[vidIndex] === "https://p.txqq.pro/api/girls?limit=1" && data.code === 0 && data.list && data.list.length > 0) {
+                            url = data.list[0].video_url;
+                        } else {
+                            vidIndex = (vidIndex + 1) % vidUrls.length;
+                            setVidSrc();
+                            return;
+                        }
+
+                        vidPlayer.src = url;
+                        vidPlayer.load();
+
+                        loading.style.display = 'flex';
+
+                        const loadTimer = setTimeout(() => {
+                            if (vidPlayer.src) {
+                                vidIndex = (vidIndex + 1) % vidUrls.length;
+                                setVidSrc();
+                            }
+                        }, 2000);
+
+                        vidPlayer.addEventListener('canplaythrough', function handleReady() {
+                            loading.style.display = 'none';
+                            clearTimeout(loadTimer);
+                            vidPlayer.play().catch(error => console.log('Auto-play blocked', error));
+                            applyEffect(curEffect);
+                            vidPlayer.removeEventListener('canplaythrough', handleReady);
+                        });
+
+                        vidPlayer.addEventListener('error', function handleError() {
+                            clearTimeout(loadTimer);
+                            loading.style.display = 'none';
+                            vidIndex = (vidIndex + 1) % vidUrls.length;
+                            setVidSrc();
+                            vidPlayer.removeEventListener('error', handleError);
+                        });
+                    })
+                    .catch(error => {
+                        vidIndex = (vidIndex + 1) % vidUrls.length;
+                        setVidSrc();
                     });
             } else {
-                videoPlayer.src = videoList[currentVideoIndex];
-                videoPlayer.load();
+                vidPlayer.src = vidUrls[vidIndex];
+                vidPlayer.load();
 
-                loadingAnimation.style.display = 'flex';
+                loading.style.display = 'flex';
 
-                const loadTimeout = setTimeout(() => {
-                    if (videoPlayer.src) {
-                        currentVideoIndex = (currentVideoIndex + 1) % videoList.length;
-                        setVideoSource();
-                    }
-                }, 3000);
+                const loadPromise = new Promise((resolve, reject) => {
+                    const loadTimer = setTimeout(() => {
+                        reject(new Error('Load timeout'));
+                    }, 2000);
 
-                videoPlayer.addEventListener('canplaythrough', function handleCanPlayThrough() {
-                    loadingAnimation.style.display = 'none';
-                    clearTimeout(loadTimeout);
-                    videoPlayer.play().catch(error => console.log('自动播放被阻止', error));
-                    applyEffect(defaultEffect);
-                    videoPlayer.removeEventListener('canplaythrough', handleCanPlayThrough);
+                    const handleReady = function() {
+                        loading.style.display = 'none';
+                        clearTimeout(loadTimer);
+                        resolve();
+                        vidPlayer.play().catch(error => console.log('Auto-play blocked', error));
+                        applyEffect(curEffect);
+                        vidPlayer.removeEventListener('canplaythrough', handleReady);
+                    };
+
+                    const handleError = function() {
+                        clearTimeout(loadTimer);
+                        loading.style.display = 'none';
+                        reject(new Error('Load error'));
+                        vidPlayer.removeEventListener('error', handleError);
+                    };
+
+                    vidPlayer.addEventListener('canplaythrough', handleReady);
+                    vidPlayer.addEventListener('error', handleError);
                 });
 
-                videoPlayer.addEventListener('error', function handleError() {
-                    clearTimeout(loadTimeout);
-                    loadingAnimation.style.display = 'none';
-                    currentVideoIndex = (currentVideoIndex + 1) % videoList.length;
-                    setVideoSource();
-                    videoPlayer.removeEventListener('error', handleError);
+                loadPromise.then(() => {
+                    // 加载成功
+                }).catch(() => {
+                    // 加载失败，播放下一个
+                    vidIndex = (vidIndex + 1) % vidUrls.length;
+                    setVidSrc();
                 });
             }
         }
 
-        function applyEffect(effect) {
-            videoPlayer.style.filter = effects[effect];
-            defaultEffect = effect;
-            localStorage.setItem("defaultEffect", effect);
+        function applyEffect(fx) {
+            vidPlayer.style.filter = effects[fx];
+            curEffect = fx;
+            localStorage.setItem("curEffect", fx);
         }
 
-        function switchInterface(interfaceName) {
-            currentInterface = interfaceName;
-            localStorage.setItem("currentInterface", currentInterface);
-            videoList = interfaces[currentInterface];
-            currentVideoIndex = 0;
-            setVideoSource();
+        function switchGroup(group) {
+            curGroup = group;
+            localStorage.setItem("curGroup", curGroup);
+            vidUrls = urlGroups[curGroup];
+            vidIndex = 0;
+            setVidSrc();
         }
 
-        function initPage() {
-            setVideoSource();
+        function initApp() {
+            setVidSrc();
 
-            videoPlayer.addEventListener('ended', function() {
-                if (isLoopPlayback) {
+            currentUrlItem.textContent = `当前接口: ${vidUrls[vidIndex]}`;
+
+            vidPlayer.addEventListener('ended', function() {
+                if (isLooping) {
                     this.currentTime = 0;
                     this.play();
                 } else {
-                    currentVideoIndex = (currentVideoIndex + 1) % videoList.length;
-                    setVideoSource();
+                    vidIndex = (vidIndex + 1) % vidUrls.length;
+                    setVidSrc();
+                    currentUrlItem.textContent = `当前接口: ${vidUrls[vidIndex]}`;
                 }
             });
 
-            videoPlayer.addEventListener('click', function() {
+            vidPlayer.addEventListener('click', function() {
                 if (this.paused) {
                     this.play();
                 } else {
@@ -408,94 +468,95 @@
                 }
             });
 
-            playModeButton.addEventListener('click', function() {
-                isLoopPlayback = !isLoopPlayback;
-                this.textContent = isLoopPlayback ? '循环' : '连续';
+            playModeBtn.addEventListener('click', function() {
+                isLooping = !isLooping;
+                this.textContent = isLooping ? '循环' : '连续';
             });
 
-            effectsButton.addEventListener('click', function(e) {
+            effectsBtn.addEventListener('click', function(e) {
                 e.stopPropagation();
-                effectsDropdown.style.display = effectsDropdown.style.display === 'block' ? 'none' : 'block';
+                effectsDrop.style.display = effectsDrop.style.display === 'block' ? 'none' : 'block';
             });
 
             document.querySelectorAll('.effects-dropdown a').forEach(link => {
                 link.addEventListener('click', function(e) {
                     e.preventDefault();
-                    const effect = this.getAttribute('data-effect');
-                    applyEffect(effect);
-                    effectsDropdown.style.display = 'none';
+                    const fx = this.getAttribute('data-fx');
+                    applyEffect(fx);
+                    effectsDrop.style.display = 'none';
                 });
             });
 
             document.querySelectorAll('.dropdown-content a').forEach(link => {
                 link.addEventListener('click', function(e) {
                     e.preventDefault();
-                    switchInterface(this.getAttribute('data-interface'));
+                    switchGroup(this.getAttribute('data-type'));
                 });
             });
 
-            toggleDropdown.addEventListener('click', function(e) {
+            toggleDrop.addEventListener('click', function(e) {
                 e.stopPropagation();
-                dropdownContent.style.display = dropdownContent.style.display === 'block' ? 'none' : 'block';
+                dropContent.style.display = dropContent.style.display === 'block' ? 'none' : 'block';
             });
 
             document.addEventListener('click', function() {
-                dropdownContent.style.display = 'none';
-                effectsDropdown.style.display = 'none';
+                dropContent.style.display = 'none';
+                effectsDrop.style.display = 'none';
             });
 
-            let touchStartYPopup = 0;
-            let touchEndYPopup = 0;
+            let startYPopup = 0;
+            let endYPopup = 0;
 
             document.addEventListener('touchstart', function(e) {
-                touchStartYPopup = e.touches[0].clientY;
+                startYPopup = e.touches[0].clientY;
             });
 
             document.addEventListener('touchend', function(e) {
-                touchEndYPopup = e.changedTouches[0].clientY;
-                if (touchEndYPopup - touchStartYPopup > 100) { 
-                    updatePopup.style.top = '0';
+                endYPopup = e.changedTouches[0].clientY;
+                if (endYPopup - startYPopup > 100) { 
+                    updatePop.style.top = '0';
                 }
             });
 
-            closeUpdatePopup.addEventListener('click', function() {
-                updatePopup.style.top = '-100%';
+            closeUpdate.addEventListener('click', function() {
+                updatePop.style.top = '-100%';
             });
 
-            let touchStartX = 0;
-            let isControlsVisible = false;
+            let startX = 0;
+            let isCtlVisible = false;
 
             document.addEventListener('touchstart', function(e) {
-                touchStartX = e.touches[0].clientX;
+                startX = e.touches[0].clientX;
             });
 
             document.addEventListener('touchend', function(e) {
-                const touchEndX = e.changedTouches[0].clientX;
-                if (touchEndX - touchStartX < -50 && !isControlsVisible) {
-                    controlsContainer.style.right = '10px';
-                    isControlsVisible = true;
+                const endX = e.changedTouches[0].clientX;
+                if (endX - startX < -50 && !isCtlVisible) {
+                    controls.style.right = '10px';
+                    isCtlVisible = true;
                 }
-                if (touchEndX - touchStartX > 50 && isControlsVisible) {
-                    controlsContainer.style.right = '-100px';
-                    isControlsVisible = false;
+                if (endX - startX > 50 && isCtlVisible) {
+                    controls.style.right = '-100px';
+                    isCtlVisible = false;
                 }
             });
 
-            let touchStartY = 0;
+            let startY = 0;
             document.addEventListener('touchstart', function(e) {
-                touchStartY = e.touches[0].clientY;
+                startY = e.touches[0].clientY;
             });
 
             document.addEventListener('touchend', function(e) {
-                const touchEndY = e.changedTouches[0].clientY;
-                if (touchStartY - touchEndY > 50) {
-                    currentVideoIndex = (currentVideoIndex + 1) % videoList.length;
-                    setVideoSource();
+                const endY = e.changedTouches[0].clientY;
+                if (startY - endY > 50) {
+                    vidIndex = (vidIndex + 1) % vidUrls.length;
+                    setVidSrc();
+                    currentUrlItem.textContent = `当前接口: ${vidUrls[vidIndex]}`;
                 }
             });
         }
 
-        window.addEventListener('load', initPage);
+        window.addEventListener('load', initApp);
     </script>
 </body>
 </html>
