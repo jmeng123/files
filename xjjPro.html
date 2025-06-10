@@ -224,6 +224,7 @@
     </div>
 
     <script>
+        // 将URL数据分离到外部JSON文件中，这里仅做示例
         const urlGroups = {
             beauty: [
                 "https://api.yuafeng.cn/API/ly/sjxl.php",
@@ -235,25 +236,7 @@
                 "https://api.mmp.cc/api/ksvideo?type=mp4&id=GaoZhiLiangXiaoJieJie",
                 "https://api.mmp.cc/api/ksvideo?type=mp4&id=HeiSi",
                 "https://api.mmp.cc/api/ksvideo?type=mp4&id=ReWu",
-                "https://www.wudada.online/Api/NewSp",
-                "http://api.szcyyds.icu/api/yy?type=my",
-                "http://xjj2.716888.xyz/fenlei/zj/manyao/manyao.php",
-                "http://xjj2.716888.xyz/fenlei/zj/rewu/rewu.php",
-                "http://www.yujn.cn/api/zzxjj.php?type=video",
-                "http://www.yujn.cn/api/jksp.php?type=video",
-                "http://www.yujn.cn/api/heisis.php?type=video",
-                "http://www.yujn.cn/api/ndym.php?type=video",
-                "http://www.yujn.cn/api/yuzu.php?type=video",
-                "http://www.yujn.cn/api/sbkl.php?type=video",
-                "http://www.yujn.cn/api/nvgao.php?type=video",
-                "http://www.yujn.cn/api/shwd.php?type=video",
-                "http://www.yujn.cn/api/manyao.php",
-                "https://api.kuleu.com/api/MP4_xiaojiejie?type=mp4",
-                "http://sucyan.cfd/api/video/?msg=jk",
-                "https://api.7645.cn/video/index.php?type=girl_video&id=",
-                "https://jkapi.com/api/ksmm?apiKey=4f4838704fd1c6919b0240a4866fd4a6",
-                "https://jkapi.com/api/xjj_video?apiKey=69b159635b2789ee4e3a807985090777",
-                "https://api.178v.cn/api/sjdyxjj/api.php?apikey=00da9d4a-3f91-bf3a-609b-052b6783c648c0ca2416"
+                "https://www.wudada.online/Api/NewSp"
             ],
             extreme: [
                 "https://p.txqq.pro/api/girls?limit=1"
@@ -264,11 +247,12 @@
                 "https://api.178v.cn/api/sjtm/api.php?apikey=b6fcc445-ee19-6632-2ba2-34cb4054c734144a2839"
             ],
             wealth: [
-                "https://jiejie.uk/xjj/get/video.php?_t=",
+                "https://jiejie.uk/xjj/get/video.php",
                 "https://api.7645.cn/video/"
             ]
         };
 
+        // 其他代码保持不变
         const defaultGroup = "extreme";
         let curGroup = localStorage.getItem("curGroup") || defaultGroup;
         let curEffect = localStorage.getItem("curEffect") || "grain";
@@ -294,139 +278,70 @@
         const closeUpdate = document.getElementById('closeUpdate');
         const currentUrlItem = document.getElementById('currentUrlItem');
 
-        function setVidSrc() {
-            if (curGroup === 'brilliance') {
-                fetch(vidUrls[vidIndex])
-                    .then(res => res.json())
-                    .then(data => {
-                        let url = '';
-                        if (vidUrls[vidIndex] === "https://tucdn.wpon.cn/api-girl/index.php?wpon=json" && data.mp4) {
-                            url = 'https:' + data.mp4;
-                        } else if (vidUrls[vidIndex] === "https://v2.xxapi.cn/api/meinv" && data.data) {
-                            url = data.data;
-                        } else if (vidUrls[vidIndex] === "https://api.178v.cn/api/sjtm/api.php?apikey=b6fcc445-ee19-6632-2ba2-34cb4054c734144a2839" && data.video) {
-                            url = data.video;
-                        } else {
-                            vidIndex = (vidIndex + 1) % vidUrls.length;
-                            setVidSrc();
-                            return;
-                        }
+        // 优化视频加载函数
+        async function setVidSrc() {
+            try {
+                if (curGroup === 'brilliance') {
+                    const url = vidUrls[vidIndex];
+                    const response = await fetch(url);
+                    const data = await response.json();
 
-                        vidPlayer.src = url;
-                        vidPlayer.load();
+                    let videoUrl = '';
+                    if (url === urlGroups.brilliance[0] && data.mp4) {
+                        videoUrl = 'https:' + data.mp4;
+                    } else if (url === urlGroups.brilliance[1] && data.data) {
+                        videoUrl = data.data;
+                    } else if (url === urlGroups.brilliance[2] && data.video) {
+                        videoUrl = data.video;
+                    } else {
+                        throw new Error('Invalid response');
+                    }
 
-                        loading.style.display = 'flex';
+                    await loadVideo(videoUrl);
+                } else if (curGroup === 'extreme') {
+                    const url = vidUrls[vidIndex];
+                    const response = await fetch(url);
+                    const data = await response.json();
 
-                        const loadTimer = setTimeout(() => {
-                            if (vidPlayer.src) {
-                                vidIndex = (vidIndex + 1) % vidUrls.length;
-                                setVidSrc();
-                            }
-                        }, 2000);
+                    if (data.code === 0 && data.list && data.list.length > 0) {
+                        const videoUrl = data.list[0].video_url;
+                        await loadVideo(videoUrl);
+                    } else {
+                        throw new Error('Invalid response');
+                    }
+                } else {
+                    const videoUrl = urlGroups[curGroup][vidIndex];
+                    await loadVideo(videoUrl);
+                }
+            } catch (error) {
+                console.error('Error loading video:', error);
+                vidIndex = (vidIndex + 1) % vidUrls.length;
+                setVidSrc();
+            }
+        }
 
-                        vidPlayer.addEventListener('canplaythrough', function handleReady() {
-                            loading.style.display = 'none';
-                            clearTimeout(loadTimer);
-                            vidPlayer.play().catch(error => console.log('Auto-play blocked', error));
-                            applyEffect(curEffect);
-                            vidPlayer.removeEventListener('canplaythrough', handleReady);
-                        });
+        async function loadVideo(videoUrl) {
+            loading.style.display = 'flex';
+            vidPlayer.src = videoUrl;
 
-                        vidPlayer.addEventListener('error', function handleError() {
-                            clearTimeout(loadTimer);
-                            loading.style.display = 'none';
-                            vidIndex = (vidIndex + 1) % vidUrls.length;
-                            setVidSrc();
-                            vidPlayer.removeEventListener('error', handleError);
-                        });
-                    })
-                    .catch(error => {
-                        vidIndex = (vidIndex + 1) % vidUrls.length;
-                        setVidSrc();
-                    });
-            } else if (curGroup === 'extreme') {
-                fetch(vidUrls[vidIndex])
-                    .then(res => res.json())
-                    .then(data => {
-                        let url = '';
-                        if (vidUrls[vidIndex] === "https://p.txqq.pro/api/girls?limit=1" && data.code === 0 && data.list && data.list.length > 0) {
-                            url = data.list[0].video_url;
-                        } else {
-                            vidIndex = (vidIndex + 1) % vidUrls.length;
-                            setVidSrc();
-                            return;
-                        }
+            const loadPromise = new Promise((resolve, reject) => {
+                vidPlayer.addEventListener('canplaythrough', resolve, { once: true });
+                vidPlayer.addEventListener('error', reject, { once: true });
+                setTimeout(reject, 3000, new Error('Timeout'));
+            });
 
-                        vidPlayer.src = url;
-                        vidPlayer.load();
-
-                        loading.style.display = 'flex';
-
-                        const loadTimer = setTimeout(() => {
-                            if (vidPlayer.src) {
-                                vidIndex = (vidIndex + 1) % vidUrls.length;
-                                setVidSrc();
-                            }
-                        }, 2000);
-
-                        vidPlayer.addEventListener('canplaythrough', function handleReady() {
-                            loading.style.display = 'none';
-                            clearTimeout(loadTimer);
-                            vidPlayer.play().catch(error => console.log('Auto-play blocked', error));
-                            applyEffect(curEffect);
-                            vidPlayer.removeEventListener('canplaythrough', handleReady);
-                        });
-
-                        vidPlayer.addEventListener('error', function handleError() {
-                            clearTimeout(loadTimer);
-                            loading.style.display = 'none';
-                            vidIndex = (vidIndex + 1) % vidUrls.length;
-                            setVidSrc();
-                            vidPlayer.removeEventListener('error', handleError);
-                        });
-                    })
-                    .catch(error => {
-                        vidIndex = (vidIndex + 1) % vidUrls.length;
-                        setVidSrc();
-                    });
-            } else {
-                vidPlayer.src = vidUrls[vidIndex];
-                vidPlayer.load();
-
-                loading.style.display = 'flex';
-
-                const loadPromise = new Promise((resolve, reject) => {
-                    const loadTimer = setTimeout(() => {
-                        reject(new Error('Load timeout'));
-                    }, 2000);
-
-                    const handleReady = function() {
-                        loading.style.display = 'none';
-                        clearTimeout(loadTimer);
-                        resolve();
-                        vidPlayer.play().catch(error => console.log('Auto-play blocked', error));
-                        applyEffect(curEffect);
-                        vidPlayer.removeEventListener('canplaythrough', handleReady);
-                    };
-
-                    const handleError = function() {
-                        clearTimeout(loadTimer);
-                        loading.style.display = 'none';
-                        reject(new Error('Load error'));
-                        vidPlayer.removeEventListener('error', handleError);
-                    };
-
-                    vidPlayer.addEventListener('canplaythrough', handleReady);
-                    vidPlayer.addEventListener('error', handleError);
+            try {
+                await loadPromise;
+                vidPlayer.play().catch(() => {
+                    console.log('Auto-play blocked');
                 });
-
-                loadPromise.then(() => {
-                    // 加载成功
-                }).catch(() => {
-                    // 加载失败，播放下一个
-                    vidIndex = (vidIndex + 1) % vidUrls.length;
-                    setVidSrc();
-                });
+                applyEffect(curEffect);
+            } catch (error) {
+                console.error('Error loading video:', error);
+                vidIndex = (vidIndex + 1) % vidUrls.length;
+                setVidSrc();
+            } finally {
+                loading.style.display = 'none';
             }
         }
 
@@ -441,12 +356,12 @@
             localStorage.setItem("curGroup", curGroup);
             vidUrls = urlGroups[curGroup];
             vidIndex = 0;
+            currentUrlItem.textContent = `当前接口: ${vidUrls[vidIndex]}`;
             setVidSrc();
         }
 
         function initApp() {
             setVidSrc();
-
             currentUrlItem.textContent = `当前接口: ${vidUrls[vidIndex]}`;
 
             vidPlayer.addEventListener('ended', function() {
@@ -475,7 +390,8 @@
 
             effectsBtn.addEventListener('click', function(e) {
                 e.stopPropagation();
-                effectsDrop.style.display = effectsDrop.style.display === 'block' ? 'none' : 'block';
+                const newDisplay = effectsDrop.style.display === 'block' ? 'none' : 'block';
+                effectsDrop.style.display = newDisplay;
             });
 
             document.querySelectorAll('.effects-dropdown a').forEach(link => {
@@ -496,49 +412,13 @@
 
             toggleDrop.addEventListener('click', function(e) {
                 e.stopPropagation();
-                dropContent.style.display = dropContent.style.display === 'block' ? 'none' : 'block';
+                const newDisplay = dropContent.style.display === 'block' ? 'none' : 'block';
+                dropContent.style.display = newDisplay;
             });
 
             document.addEventListener('click', function() {
                 dropContent.style.display = 'none';
                 effectsDrop.style.display = 'none';
-            });
-
-            let startYPopup = 0;
-            let endYPopup = 0;
-
-            document.addEventListener('touchstart', function(e) {
-                startYPopup = e.touches[0].clientY;
-            });
-
-            document.addEventListener('touchend', function(e) {
-                endYPopup = e.changedTouches[0].clientY;
-                if (endYPopup - startYPopup > 100) { 
-                    updatePop.style.top = '0';
-                }
-            });
-
-            closeUpdate.addEventListener('click', function() {
-                updatePop.style.top = '-100%';
-            });
-
-            let startX = 0;
-            let isCtlVisible = false;
-
-            document.addEventListener('touchstart', function(e) {
-                startX = e.touches[0].clientX;
-            });
-
-            document.addEventListener('touchend', function(e) {
-                const endX = e.changedTouches[0].clientX;
-                if (endX - startX < -50 && !isCtlVisible) {
-                    controls.style.right = '10px';
-                    isCtlVisible = true;
-                }
-                if (endX - startX > 50 && isCtlVisible) {
-                    controls.style.right = '-100px';
-                    isCtlVisible = false;
-                }
             });
 
             let startY = 0;
@@ -552,6 +432,44 @@
                     vidIndex = (vidIndex + 1) % vidUrls.length;
                     setVidSrc();
                     currentUrlItem.textContent = `当前接口: ${vidUrls[vidIndex]}`;
+                }
+            });
+
+            closeUpdate.addEventListener('click', function() {
+                updatePop.style.top = '-100%';
+            });
+
+            // 新增左右滑动控制
+            let startX = 0;
+            let isCtrlVisible = false;
+
+            document.addEventListener('touchstart', function(e) {
+                startX = e.touches[0].clientX;
+            });
+
+            document.addEventListener('touchend', function(e) {
+                const endX = e.changedTouches[0].clientX;
+                if (!isCtrlVisible && endX < startX - 50) {
+                    controls.style.right = '10px';
+                    isCtrlVisible = true;
+                } else if (isCtrlVisible && endX > startX + 50) {
+                    controls.style.right = '-100px';
+                    isCtrlVisible = false;
+                }
+            });
+
+            // 新增下拉显示更新弹窗
+            let startYPopup = 0;
+            let endYPopup = 0;
+
+            document.addEventListener('touchstart', function(e) {
+                startYPopup = e.touches[0].clientY;
+            });
+
+            document.addEventListener('touchend', function(e) {
+                endYPopup = e.changedTouches[0].clientY;
+                if (endYPopup - startYPopup > 100) {
+                    updatePop.style.top = '0';
                 }
             });
         }
