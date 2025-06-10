@@ -224,7 +224,6 @@
     </div>
 
     <script>
-        // 将URL数据分离到外部JSON文件中，这里仅做示例
         const urlGroups = {
             beauty: [
                 "https://api.yuafeng.cn/API/ly/sjxl.php",
@@ -252,7 +251,6 @@
             ]
         };
 
-        // 其他代码保持不变
         const defaultGroup = "extreme";
         let curGroup = localStorage.getItem("curGroup") || defaultGroup;
         let curEffect = localStorage.getItem("curEffect") || "grain";
@@ -278,7 +276,6 @@
         const closeUpdate = document.getElementById('closeUpdate');
         const currentUrlItem = document.getElementById('currentUrlItem');
 
-        // 优化视频加载函数
         async function setVidSrc() {
             try {
                 if (curGroup === 'brilliance') {
@@ -439,7 +436,6 @@
                 updatePop.style.top = '-100%';
             });
 
-            // 新增左右滑动控制
             let startX = 0;
             let isCtrlVisible = false;
 
@@ -458,7 +454,6 @@
                 }
             });
 
-            // 新增下拉显示更新弹窗
             let startYPopup = 0;
             let endYPopup = 0;
 
