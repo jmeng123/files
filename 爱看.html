@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>全屏短视频播放器</title>
+    <title>爱看美女</title>
     <style>
         * {
             margin: 0;
@@ -43,7 +43,6 @@
             left: 0;
         }
         
-        /* 加载动画 */
         .loading {
             position: absolute;
             top: 50%;
@@ -62,7 +61,6 @@
             to { transform: translate(-50%, -50%) rotate(360deg); }
         }
         
-        /* 触摸层 */
         .touch-layer {
             position: absolute;
             top: 0;
@@ -72,7 +70,6 @@
             z-index: 20;
         }
         
-        /* 播放/暂停图标 */
         .play-icon {
             position: absolute;
             top: 50%;
@@ -100,7 +97,6 @@
             fill: white;
         }
         
-        /* 右侧操作按钮 - 调整为与顶部按钮一致的大小 */
         .side-actions {
             position: absolute;
             right: 15px;
@@ -139,12 +135,10 @@
             transition: all 0.2s;
         }
         
-        /* 抖音风格喜欢按钮 - 变红即可 */
         .action-btn.liked svg {
             fill: #fe2c55;
         }
         
-        /* 底部信息 - 不显示接口名 */
         .video-info {
             position: absolute;
             bottom: 20px;
@@ -168,7 +162,6 @@
             line-height: 1.3;
         }
         
-        /* 进度条 */
         .progress-container {
             position: absolute;
             bottom: 0;
@@ -186,7 +179,6 @@
             transition: width 0.1s linear;
         }
         
-        /* 顶部按钮 */
         .top-actions {
             position: absolute;
             top: 15px;
@@ -225,7 +217,6 @@
             fill: #fe2c55;
         }
         
-        /* 弹窗通用样式 */
         .modal {
             position: absolute;
             top: 0;
@@ -276,7 +267,6 @@
             padding: 10px;
         }
         
-        /* 分类列表 */
         .category-list {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
@@ -314,7 +304,6 @@
             font-weight: 500;
         }
         
-        /* 视频列表项 */
         .video-item {
             display: flex;
             align-items: center;
@@ -401,7 +390,6 @@
             fill: white;
         }
         
-        /* 提示 */
         .toast {
             position: absolute;
             top: 50%;
@@ -420,7 +408,6 @@
             transform: translate(-50%, -50%) scale(1);
         }
         
-        /* 切换提示 */
         .switch-hint {
             position: absolute;
             left: 50%;
@@ -444,7 +431,6 @@
         .switch-hint.prev { top: 100px; }
         .switch-hint.next { bottom: 100px; }
         
-        /* 空状态 */
         .empty-state {
             display: flex;
             flex-direction: column;
@@ -454,7 +440,6 @@
             color: rgba(255,255,255,0.5);
         }
         
-        /* 错误提示 */
         .error-overlay {
             position: absolute;
             top: 0;
@@ -487,7 +472,6 @@
             cursor: pointer;
         }
         
-        /* 加载遮罩 */
         .loading-overlay {
             position: absolute;
             top: 0;
@@ -515,19 +499,15 @@
             <video id="videoPlayer" playsinline webkit-playsinline loop></video>
             <div class="loading" id="loading"></div>
             
-            <!-- 触摸层 -->
             <div class="touch-layer" id="touchLayer"></div>
             
-            <!-- 播放/暂停图标 -->
             <div class="play-icon" id="playIcon">
                 <svg viewBox="0 0 24 24" id="playIconSvg"><path d="M8 5v14l11-7z"/></svg>
             </div>
             
-            <!-- 切换提示 -->
             <div class="switch-hint prev" id="prevHint">⬆ 上一个</div>
             <div class="switch-hint next" id="nextHint">⬇ 下一个</div>
             
-            <!-- 顶部按钮 -->
             <div class="top-actions">
                 <button class="top-btn" id="favListBtn" title="喜欢的视频">
                     <svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
@@ -537,7 +517,6 @@
                 </button>
             </div>
             
-            <!-- 右侧操作按钮 - 调整为与顶部按钮一致 -->
             <div class="side-actions" id="sideActions">
                 <button class="action-btn" id="likeBtn" title="喜欢">
                     <svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
@@ -550,18 +529,15 @@
                 </button>
             </div>
             
-            <!-- 底部信息 - 不显示接口名 -->
             <div class="video-info">
                 <div class="video-title" id="videoTitle"></div>
                 <div class="video-desc" id="videoDesc">双击播放/暂停 · 上下滑动切换视频 · 左滑切换分类</div>
             </div>
             
-            <!-- 进度条 -->
             <div class="progress-container">
                 <div class="progress-bar" id="progressBar"></div>
             </div>
             
-            <!-- 分类列表弹窗 -->
             <div class="modal" id="categoryModal">
                 <div class="modal-header">
                     <span class="modal-title">选择分类</span>
@@ -572,7 +548,6 @@
                 </div>
             </div>
             
-            <!-- 喜欢的视频列表弹窗 -->
             <div class="modal" id="favListModal">
                 <div class="modal-header">
                     <span class="modal-title">喜欢的视频 (<span id="favListCount">0</span>)</span>
@@ -581,19 +556,16 @@
                 <div class="modal-content" id="favListContent"></div>
             </div>
             
-            <!-- 提示 -->
             <div class="toast" id="toast">
                 <div id="toastText">操作成功</div>
             </div>
             
-            <!-- 错误提示 -->
             <div class="error-overlay" id="errorOverlay">
                 <div style="font-size: 48px; margin-bottom: 10px;">⚠️</div>
                 <div id="errorText">加载失败</div>
                 <button class="retry-btn" id="retryBtn">重新加载</button>
             </div>
             
-            <!-- 加载遮罩 -->
             <div class="loading-overlay" id="loadingOverlay">
                 <div class="loading" style="position: static; transform: none; margin-bottom: 15px;"></div>
                 <div>正在加载...</div>
@@ -602,7 +574,6 @@
     </div>
 
     <script>
-        // 接口配置 - 性感添加到包臀裙后面
         const API_LIST = [
             { name: '包臀裙', url: 'https://gitee.com/xiteledeyayi/json/raw/master/短视频/btq.txt', icon: '👗' },
             { name: '性感', url: 'https://gitee.com/xiteledeyayi/json/raw/master/短视频/sf.txt', icon: '🔥' },
@@ -619,7 +590,6 @@
             { name: '红色韵味', url: 'https://gitee.com/xiteledeyayi/json/raw/master/短视频/hsyw.txt', icon: '❤️' }
         ];
         
-        // 状态
         let currentCategoryIndex = 0;
         let videoUrls = [];
         let likedVideos = JSON.parse(localStorage.getItem('likedVideos') || '[]');
@@ -634,7 +604,6 @@
         let tapCount = 0;
         let tapTimeout = null;
         
-        // DOM元素
         const video = document.getElementById('videoPlayer');
         const loading = document.getElementById('loading');
         const touchLayer = document.getElementById('touchLayer');
@@ -657,7 +626,6 @@
         const errorText = document.getElementById('errorText');
         const loadingOverlay = document.getElementById('loadingOverlay');
         
-        // 解析视频列表
         function parseVideoList(text) {
             const lines = text.split('\n');
             const urls = [];
@@ -673,12 +641,10 @@
             return urls;
         }
         
-        // 检查是否喜欢
         function isLiked(url) {
             return likedVideos.includes(url);
         }
         
-        // 切换喜欢状态 - 抖音风格
         function toggleLike() {
             const currentUrl = videoUrls[currentIndex];
             const index = likedVideos.indexOf(currentUrl);
@@ -697,7 +663,6 @@
             updateFavListBtn();
         }
         
-        // 更新喜欢列表按钮状态
         function updateFavListBtn() {
             if (likedVideos.length > 0) {
                 favListBtn.classList.add('active');
@@ -706,14 +671,12 @@
             }
         }
         
-        // 显示提示
         function showToast(text) {
             toastText.textContent = text;
             toast.classList.add('show');
             setTimeout(() => toast.classList.remove('show'), 1500);
         }
         
-        // 分享功能
         function shareVideo() {
             if (videoUrls.length === 0) return;
             const url = videoUrls[currentIndex];
@@ -731,7 +694,6 @@
             });
         }
         
-        // 切换分类
         function switchCategory(direction) {
             let newIndex = currentCategoryIndex + direction;
             if (newIndex < 0) newIndex = API_LIST.length - 1;
@@ -744,7 +706,6 @@
             fetchVideoList();
         }
         
-        // 获取视频列表
         async function fetchVideoList() {
             loading.style.display = 'block';
             errorOverlay.classList.remove('show');
@@ -776,7 +737,6 @@
             }
         }
         
-        // 加载视频
         function loadVideo(index) {
             if (videoUrls.length === 0) return;
             
@@ -799,7 +759,6 @@
                 });
             }
             
-            // 不显示视频名称，只显示序号信息
             videoTitle.textContent = '';
             videoDesc.textContent = `${currentIndex + 1} / ${videoUrls.length}`;
             
@@ -808,7 +767,6 @@
             loading.style.display = 'block';
         }
         
-        // 更新播放图标
         function updatePlayIcon() {
             if (isPlaying) {
                 playIconSvg.innerHTML = '<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>';
@@ -817,7 +775,6 @@
             }
         }
         
-        // 切换播放状态
         function togglePlay() {
             if (video.paused) {
                 video.play().then(() => {
@@ -837,7 +794,6 @@
             }
         }
         
-        // 切换视频
         function prevVideo() {
             document.getElementById('prevHint').classList.add('show');
             setTimeout(() => document.getElementById('prevHint').classList.remove('show'), 800);
@@ -850,7 +806,6 @@
             loadVideo(currentIndex + 1);
         }
         
-        // 下载视频
         function downloadVideo() {
             if (videoUrls.length === 0) return;
             const url = videoUrls[currentIndex];
@@ -874,7 +829,6 @@
                 });
         }
         
-        // 渲染分类列表
         function renderCategoryList() {
             categoryList.innerHTML = '';
             
@@ -899,7 +853,6 @@
             });
         }
         
-        // 从URL提取文件名
         function getFileName(url) {
             try {
                 return url.split('/').pop().split('?')[0] || '未知视频';
@@ -908,7 +861,6 @@
             }
         }
         
-        // 从URL判断分类
         function getCategoryFromUrl(url) {
             for (let i = 0; i < API_LIST.length; i++) {
                 const apiFileName = API_LIST[i].url.split('/').pop().replace('.txt', '');
@@ -919,7 +871,6 @@
             return null;
         }
         
-        // 渲染喜欢列表
         function renderFavList() {
             favListContent.innerHTML = '';
             favListCount.textContent = likedVideos.length;
@@ -965,13 +916,11 @@
                     </div>
                 `;
                 
-                // 点击播放
                 item.addEventListener('click', (e) => {
                     if (e.target.closest('.item-action-btn')) return;
                     playLikedVideo(url);
                 });
                 
-                // 取消喜欢
                 const unlikeBtn = item.querySelector('.item-action-btn');
                 unlikeBtn.addEventListener('click', (e) => {
                     e.stopPropagation();
@@ -996,7 +945,6 @@
             });
         }
         
-        // 播放喜欢的视频
         async function playLikedVideo(targetUrl) {
             loadingOverlay.classList.add('show');
             hideAllModals();
@@ -1040,7 +988,6 @@
             loadingOverlay.classList.remove('show');
         }
         
-        // 显示/隐藏弹窗
         function showCategoryList() {
             renderCategoryList();
             categoryModal.classList.add('show');
@@ -1056,7 +1003,6 @@
             favListModal.classList.remove('show');
         }
         
-        // 触摸事件 - 左滑切换分类，右滑无操作
         touchLayer.addEventListener('touchstart', (e) => {
             isTouching = true;
             hasMoved = false;
@@ -1087,24 +1033,18 @@
             const diffY = touchStartY - touchEndY;
             const duration = Date.now() - touchStartTime;
             
-            // 滑动检测
             if (Math.abs(diffX) > 50 || Math.abs(diffY) > 50) {
                 if (Math.abs(diffX) > Math.abs(diffY)) {
-                    // 水平滑动
                     if (diffX > 0) {
-                        // 左滑 - 切换分类（下一个）
                         switchCategory(1);
                     }
-                    // 右滑 - 无操作
                 } else {
-                    // 垂直滑动 - 切换视频
                     if (diffY > 0) nextVideo();
                     else prevVideo();
                 }
                 return;
             }
             
-            // 双击播放/暂停
             if (!hasMoved && duration < 300) {
                 const currentTime = Date.now();
                 const timeSinceLastTap = currentTime - lastTapTime;
@@ -1125,7 +1065,6 @@
             }
         }, { passive: true });
         
-        // 鼠标事件
         let mouseDown = false;
         let mouseMoved = false;
         
@@ -1184,7 +1123,6 @@
             }
         });
         
-        // 视频事件
         video.addEventListener('waiting', () => loading.style.display = 'block');
         video.addEventListener('playing', () => {
             loading.style.display = 'none';
@@ -1206,7 +1144,6 @@
             errorOverlay.classList.add('show');
         });
         
-        // 按钮事件
         likeBtn.addEventListener('click', (e) => {
             e.stopPropagation();
             toggleLike();
@@ -1228,7 +1165,6 @@
         document.getElementById('closeFavList').addEventListener('click', hideAllModals);
         document.getElementById('retryBtn').addEventListener('click', fetchVideoList);
         
-        // 键盘控制
         document.addEventListener('keydown', (e) => {
             switch(e.key) {
                 case ' ': 
@@ -1243,7 +1179,6 @@
             }
         });
         
-        // 初始化
         updateFavListBtn();
         fetchVideoList();
     </script>
