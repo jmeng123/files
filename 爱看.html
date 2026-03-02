@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>爱看美女</title>
+    <title>爱看美女 · 滑动切换</title>
     <style>
         * {
             margin: 0;
@@ -179,10 +179,11 @@
             transition: width 0.1s linear;
         }
         
+        /* 左上角按钮组 (原右上角移动至此) */
         .top-actions {
             position: absolute;
             top: 15px;
-            right: 15px;
+            left: 15px;          /* 从 right 改为 left */
             display: flex;
             gap: 10px;
             z-index: 30;
@@ -508,6 +509,7 @@
             <div class="switch-hint prev" id="prevHint">⬆ 上一个</div>
             <div class="switch-hint next" id="nextHint">⬇ 下一个</div>
             
+            <!-- 左上角按钮组 (原右上角) -->
             <div class="top-actions">
                 <button class="top-btn" id="favListBtn" title="喜欢的视频">
                     <svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
@@ -531,7 +533,7 @@
             
             <div class="video-info">
                 <div class="video-title" id="videoTitle"></div>
-                <div class="video-desc" id="videoDesc">双击播放/暂停 · 上下滑动切换视频 · 左滑切换分类</div>
+                <div class="video-desc" id="videoDesc">双击播放/暂停 · 上下滑动切换视频 · 左右滑动切换分类</div>
             </div>
             
             <div class="progress-container">
@@ -574,613 +576,648 @@
     </div>
 
     <script>
-        const API_LIST = [
-            { name: '包臀裙', url: 'https://gitee.com/xiteledeyayi/json/raw/master/短视频/btq.txt', icon: '👗' },
-            { name: '性感', url: 'https://gitee.com/xiteledeyayi/json/raw/master/短视频/sf.txt', icon: '🔥' },
-            { name: '旗袍', url: 'https://gitee.com/xiteledeyayi/json/raw/master/短视频/qp.txt', icon: '👘' },
-            { name: '热舞', url: 'https://gitee.com/xiteledeyayi/json/raw/master/短视频/rw.txt', icon: '💃' },
-            { name: '玉足', url: 'https://gitee.com/xiteledeyayi/json/raw/master/短视频/ymg.txt', icon: '🦶' },
-            { name: '瑜伽', url: 'https://gitee.com/xiteledeyayi/json/raw/master/短视频/yj.txt', icon: '🧘' },
-            { name: '黑丝', url: 'https://gitee.com/xiteledeyayi/json/raw/master/短视频/hs.txt', icon: '🖤' },
-            { name: '白丝', url: 'https://gitee.com/xiteledeyayi/json/raw/master/短视频/bs.txt', icon: '🤍' },
-            { name: '美女', url: 'https://gitee.com/xiteledeyayi/json/raw/master/短视频/mn.txt', icon: '👩' },
-            { name: '车模', url: 'https://gitee.com/xiteledeyayi/json/raw/master/短视频/cm.txt', icon: '🚗' },
-            { name: '豹纹', url: 'https://gitee.com/xiteledeyayi/json/raw/master/短视频/bw.txt', icon: '🐆' },
-            { name: '紫色韵味', url: 'https://gitee.com/xiteledeyayi/json/raw/master/短视频/zsyw.txt', icon: '💜' },
-            { name: '红色韵味', url: 'https://gitee.com/xiteledeyayi/json/raw/master/短视频/hsyw.txt', icon: '❤️' }
-        ];
-        
-        let currentCategoryIndex = 0;
-        let videoUrls = [];
-        let likedVideos = JSON.parse(localStorage.getItem('likedVideos') || '[]');
-        let currentIndex = 0;
-        let isPlaying = true;
-        let touchStartX = 0;
-        let touchStartY = 0;
-        let touchStartTime = 0;
-        let isTouching = false;
-        let hasMoved = false;
-        let lastTapTime = 0;
-        let tapCount = 0;
-        let tapTimeout = null;
-        
-        const video = document.getElementById('videoPlayer');
-        const loading = document.getElementById('loading');
-        const touchLayer = document.getElementById('touchLayer');
-        const playIcon = document.getElementById('playIcon');
-        const playIconSvg = document.getElementById('playIconSvg');
-        const videoTitle = document.getElementById('videoTitle');
-        const videoDesc = document.getElementById('videoDesc');
-        const progressBar = document.getElementById('progressBar');
-        const likeBtn = document.getElementById('likeBtn');
-        const favListBtn = document.getElementById('favListBtn');
-        const categoryListBtn = document.getElementById('categoryListBtn');
-        const categoryModal = document.getElementById('categoryModal');
-        const favListModal = document.getElementById('favListModal');
-        const categoryList = document.getElementById('categoryList');
-        const favListContent = document.getElementById('favListContent');
-        const favListCount = document.getElementById('favListCount');
-        const toast = document.getElementById('toast');
-        const toastText = document.getElementById('toastText');
-        const errorOverlay = document.getElementById('errorOverlay');
-        const errorText = document.getElementById('errorText');
-        const loadingOverlay = document.getElementById('loadingOverlay');
-        
-        function parseVideoList(text) {
-            const lines = text.split('\n');
-            const urls = [];
-            for (let line of lines) {
-                line = line.trim();
-                if (!line) continue;
-                let url = line;
-                const match = line.match(/https?:\/\/[^\s"']+/);
-                if (match) url = match[0];
-                url = url.replace(/[",'\[\]{}]+$/, '');
-                if (url.match(/^https?:\/\/.+/)) urls.push(url);
-            }
-            return urls;
-        }
-        
-        function isLiked(url) {
-            return likedVideos.includes(url);
-        }
-        
-        function toggleLike() {
-            const currentUrl = videoUrls[currentIndex];
-            const index = likedVideos.indexOf(currentUrl);
+        (function() {
+            // API列表 ———— 确保热舞分类（rw.txt）位于第一个
+            const API_LIST = [
+                { name: '热舞', url: 'https://gitee.com/xiteledeyayi/json/raw/master/短视频/rw.txt', icon: '💃' },
+                { name: '包臀裙', url: 'https://gitee.com/xiteledeyayi/json/raw/master/短视频/btq.txt', icon: '👗' },
+                { name: '性感', url: 'https://gitee.com/xiteledeyayi/json/raw/master/短视频/sf.txt', icon: '🔥' },
+                { name: '旗袍', url: 'https://gitee.com/xiteledeyayi/json/raw/master/短视频/qp.txt', icon: '👘' },            
+                { name: '玉足', url: 'https://gitee.com/xiteledeyayi/json/raw/master/短视频/ymg.txt', icon: '🦶' },
+                { name: '瑜伽', url: 'https://gitee.com/xiteledeyayi/json/raw/master/短视频/yj.txt', icon: '🧘' },
+                { name: '黑丝', url: 'https://gitee.com/xiteledeyayi/json/raw/master/短视频/hs.txt', icon: '🖤' },
+                { name: '白丝', url: 'https://gitee.com/xiteledeyayi/json/raw/master/短视频/bs.txt', icon: '🤍' },
+                { name: '美女', url: 'https://gitee.com/xiteledeyayi/json/raw/master/短视频/mn.txt', icon: '👩' },
+                { name: '车模', url: 'https://gitee.com/xiteledeyayi/json/raw/master/短视频/cm.txt', icon: '🚗' },
+                { name: '豹纹', url: 'https://gitee.com/xiteledeyayi/json/raw/master/短视频/bw.txt', icon: '🐆' },
+                { name: '紫色韵味', url: 'https://gitee.com/xiteledeyayi/json/raw/master/短视频/zsyw.txt', icon: '💜' },
+                { name: '红色韵味', url: 'https://gitee.com/xiteledeyayi/json/raw/master/短视频/hsyw.txt', icon: '❤️' }
+            ];
             
-            if (index > -1) {
-                likedVideos.splice(index, 1);
-                likeBtn.classList.remove('liked');
-                showToast('已取消喜欢');
-            } else {
-                likedVideos.push(currentUrl);
-                likeBtn.classList.add('liked');
-                showToast('已喜欢');
+            // 当前分类索引 (0 = 热舞)
+            let currentCategoryIndex = 0;
+            let videoUrls = [];
+            let likedVideos = JSON.parse(localStorage.getItem('likedVideos') || '[]');
+            let currentIndex = 0;
+            let isPlaying = true;
+            let touchStartX = 0;
+            let touchStartY = 0;
+            let touchStartTime = 0;
+            let isTouching = false;
+            let hasMoved = false;
+            let lastTapTime = 0;
+            let tapCount = 0;
+            let tapTimeout = null;
+            
+            // DOM 元素
+            const video = document.getElementById('videoPlayer');
+            const loading = document.getElementById('loading');
+            const touchLayer = document.getElementById('touchLayer');
+            const playIcon = document.getElementById('playIcon');
+            const playIconSvg = document.getElementById('playIconSvg');
+            const videoTitle = document.getElementById('videoTitle');
+            const videoDesc = document.getElementById('videoDesc');
+            const progressBar = document.getElementById('progressBar');
+            const likeBtn = document.getElementById('likeBtn');
+            const favListBtn = document.getElementById('favListBtn');
+            const categoryListBtn = document.getElementById('categoryListBtn');
+            const categoryModal = document.getElementById('categoryModal');
+            const favListModal = document.getElementById('favListModal');
+            const categoryList = document.getElementById('categoryList');
+            const favListContent = document.getElementById('favListContent');
+            const favListCount = document.getElementById('favListCount');
+            const toast = document.getElementById('toast');
+            const toastText = document.getElementById('toastText');
+            const errorOverlay = document.getElementById('errorOverlay');
+            const errorText = document.getElementById('errorText');
+            const loadingOverlay = document.getElementById('loadingOverlay');
+            
+            // 解析文本中的视频链接
+            function parseVideoList(text) {
+                const lines = text.split('\n');
+                const urls = [];
+                for (let line of lines) {
+                    line = line.trim();
+                    if (!line) continue;
+                    let url = line;
+                    const match = line.match(/https?:\/\/[^\s"']+/);
+                    if (match) url = match[0];
+                    url = url.replace(/[",'\[\]{}]+$/, '');
+                    if (url.match(/^https?:\/\/.+/)) urls.push(url);
+                }
+                return urls;
             }
             
-            localStorage.setItem('likedVideos', JSON.stringify(likedVideos));
-            updateFavListBtn();
-        }
-        
-        function updateFavListBtn() {
-            if (likedVideos.length > 0) {
-                favListBtn.classList.add('active');
-            } else {
-                favListBtn.classList.remove('active');
+            function isLiked(url) {
+                return likedVideos.includes(url);
             }
-        }
-        
-        function showToast(text) {
-            toastText.textContent = text;
-            toast.classList.add('show');
-            setTimeout(() => toast.classList.remove('show'), 1500);
-        }
-        
-        function shareVideo() {
-            if (videoUrls.length === 0) return;
-            const url = videoUrls[currentIndex];
             
-            navigator.clipboard.writeText(url).then(() => {
-                showToast('链接已复制');
-            }).catch(() => {
-                const input = document.createElement('input');
-                input.value = url;
-                document.body.appendChild(input);
-                input.select();
-                document.execCommand('copy');
-                document.body.removeChild(input);
-                showToast('链接已复制');
-            });
-        }
-        
-        function switchCategory(direction) {
-            let newIndex = currentCategoryIndex + direction;
-            if (newIndex < 0) newIndex = API_LIST.length - 1;
-            if (newIndex >= API_LIST.length) newIndex = 0;
-            
-            currentCategoryIndex = newIndex;
-            currentIndex = 0;
-            
-            showToast(API_LIST[currentCategoryIndex].name);
-            fetchVideoList();
-        }
-        
-        async function fetchVideoList() {
-            loading.style.display = 'block';
-            errorOverlay.classList.remove('show');
-            
-            try {
-                const api = API_LIST[currentCategoryIndex];
-                const url = api.url + '?t=' + Date.now();
+            function toggleLike() {
+                const currentUrl = videoUrls[currentIndex];
+                const index = likedVideos.indexOf(currentUrl);
                 
-                const response = await fetch(url);
-                if (!response.ok) throw new Error(`HTTP错误: ${response.status}`);
+                if (index > -1) {
+                    likedVideos.splice(index, 1);
+                    likeBtn.classList.remove('liked');
+                    showToast('已取消喜欢');
+                } else {
+                    likedVideos.push(currentUrl);
+                    likeBtn.classList.add('liked');
+                    showToast('已喜欢');
+                }
                 
-                const text = await response.text();
-                const urls = parseVideoList(text);
-                
-                if (urls.length === 0) throw new Error('未找到有效的视频地址');
-                
-                videoUrls = urls;
-                console.log(`[${api.name}] 成功加载 ${urls.length} 个视频`);
-                
-                if (currentIndex >= videoUrls.length) currentIndex = 0;
-                
-                loadVideo(currentIndex);
+                localStorage.setItem('likedVideos', JSON.stringify(likedVideos));
                 updateFavListBtn();
-                
-            } catch (error) {
-                console.error('获取失败:', error);
-                errorText.textContent = `获取[${API_LIST[currentCategoryIndex].name}]失败: ${error.message}`;
-                errorOverlay.classList.add('show');
             }
-        }
-        
-        function loadVideo(index) {
-            if (videoUrls.length === 0) return;
             
-            if (index < 0) index = videoUrls.length - 1;
-            if (index >= videoUrls.length) index = 0;
+            function updateFavListBtn() {
+                if (likedVideos.length > 0) {
+                    favListBtn.classList.add('active');
+                } else {
+                    favListBtn.classList.remove('active');
+                }
+            }
             
-            currentIndex = index;
-            const currentUrl = videoUrls[currentIndex];
+            function showToast(text) {
+                toastText.textContent = text;
+                toast.classList.add('show');
+                setTimeout(() => toast.classList.remove('show'), 1500);
+            }
             
-            video.src = currentUrl;
-            video.load();
-            
-            const playPromise = video.play();
-            if (playPromise !== undefined) {
-                playPromise.then(() => {
-                    isPlaying = true;
+            function shareVideo() {
+                if (videoUrls.length === 0) return;
+                const url = videoUrls[currentIndex];
+                
+                navigator.clipboard.writeText(url).then(() => {
+                    showToast('链接已复制');
                 }).catch(() => {
-                    isPlaying = false;
-                    updatePlayIcon();
+                    const input = document.createElement('input');
+                    input.value = url;
+                    document.body.appendChild(input);
+                    input.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(input);
+                    showToast('链接已复制');
                 });
             }
             
-            videoTitle.textContent = '';
-            videoDesc.textContent = `${currentIndex + 1} / ${videoUrls.length}`;
-            
-            likeBtn.classList.toggle('liked', isLiked(currentUrl));
-            
-            loading.style.display = 'block';
-        }
-        
-        function updatePlayIcon() {
-            if (isPlaying) {
-                playIconSvg.innerHTML = '<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>';
-            } else {
-                playIconSvg.innerHTML = '<path d="M8 5v14l11-7z"/>';
-            }
-        }
-        
-        function togglePlay() {
-            if (video.paused) {
-                video.play().then(() => {
-                    isPlaying = true;
-                    updatePlayIcon();
-                    playIcon.classList.add('show');
-                    setTimeout(() => playIcon.classList.remove('show'), 500);
-                }).catch(err => {
-                    console.error('播放失败:', err);
-                });
-            } else {
-                video.pause();
-                isPlaying = false;
-                updatePlayIcon();
-                playIcon.classList.add('show');
-                setTimeout(() => playIcon.classList.remove('show'), 500);
-            }
-        }
-        
-        function prevVideo() {
-            document.getElementById('prevHint').classList.add('show');
-            setTimeout(() => document.getElementById('prevHint').classList.remove('show'), 800);
-            loadVideo(currentIndex - 1);
-        }
-        
-        function nextVideo() {
-            document.getElementById('nextHint').classList.add('show');
-            setTimeout(() => document.getElementById('nextHint').classList.remove('show'), 800);
-            loadVideo(currentIndex + 1);
-        }
-        
-        function downloadVideo() {
-            if (videoUrls.length === 0) return;
-            const url = videoUrls[currentIndex];
-            
-            showToast('开始下载...');
-            
-            fetch(url)
-                .then(response => response.blob())
-                .then(blob => {
-                    const a = document.createElement('a');
-                    a.href = URL.createObjectURL(blob);
-                    a.download = `video_${currentIndex + 1}.mp4`;
-                    document.body.appendChild(a);
-                    a.click();
-                    document.body.removeChild(a);
-                    showToast('下载完成');
-                })
-                .catch(() => {
-                    window.open(url, '_blank');
-                    showToast('已在新窗口打开');
-                });
-        }
-        
-        function renderCategoryList() {
-            categoryList.innerHTML = '';
-            
-            API_LIST.forEach((api, index) => {
-                const item = document.createElement('div');
-                item.className = 'category-item';
-                if (index === currentCategoryIndex) item.classList.add('active');
+            // 左右滑动切换分类 (direction: 1 下一个分类, -1 上一个分类)
+            function switchCategory(direction) {
+                let newIndex = currentCategoryIndex + direction;
+                if (newIndex < 0) newIndex = API_LIST.length - 1;
+                if (newIndex >= API_LIST.length) newIndex = 0;
                 
-                item.innerHTML = `
-                    <div class="category-icon">${api.icon}</div>
-                    <div class="category-name">${api.name}</div>
-                `;
+                currentCategoryIndex = newIndex;
+                currentIndex = 0;
                 
-                item.addEventListener('click', () => {
-                    currentCategoryIndex = index;
-                    currentIndex = 0;
-                    fetchVideoList();
-                    hideAllModals();
-                });
-                
-                categoryList.appendChild(item);
-            });
-        }
-        
-        function getFileName(url) {
-            try {
-                return url.split('/').pop().split('?')[0] || '未知视频';
-            } catch {
-                return '未知视频';
-            }
-        }
-        
-        function getCategoryFromUrl(url) {
-            for (let i = 0; i < API_LIST.length; i++) {
-                const apiFileName = API_LIST[i].url.split('/').pop().replace('.txt', '');
-                if (url.includes(apiFileName)) {
-                    return { index: i, name: API_LIST[i].name, api: API_LIST[i] };
-                }
-            }
-            return null;
-        }
-        
-        function renderFavList() {
-            favListContent.innerHTML = '';
-            favListCount.textContent = likedVideos.length;
-            
-            if (likedVideos.length === 0) {
-                favListContent.innerHTML = `
-                    <div class="empty-state">
-                        <div style="font-size: 48px; margin-bottom: 10px;">💔</div>
-                        <div>暂无喜欢的视频</div>
-                    </div>
-                `;
-                return;
+                showToast(API_LIST[currentCategoryIndex].name);
+                fetchVideoList();
             }
             
-            const reversedLiked = [...likedVideos].reverse();
-            
-            reversedLiked.forEach((url) => {
-                const categoryInfo = getCategoryFromUrl(url);
-                const categoryName = categoryInfo ? categoryInfo.name : '未知分类';
-                const fileName = getFileName(url);
-                
-                const item = document.createElement('div');
-                item.className = 'video-item';
-                
-                const isCurrentPlaying = (url === video.src);
-                if (isCurrentPlaying) {
-                    item.classList.add('active');
-                }
-                
-                item.innerHTML = `
-                    <div class="item-thumb">🎬</div>
-                    <div class="item-info">
-                        <div class="item-title">${fileName.substring(0, 25)}</div>
-                        <div class="item-meta">
-                            <span style="color: ${categoryInfo ? '#fe2c55' : '#888'}">${categoryName}</span>
-                            ${isCurrentPlaying ? '<span class="item-status"> ● 播放中</span>' : ''}
-                        </div>
-                    </div>
-                    <div class="item-actions">
-                        <button class="item-action-btn liked" data-url="${url}" title="取消喜欢">
-                            <svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
-                        </button>
-                    </div>
-                `;
-                
-                item.addEventListener('click', (e) => {
-                    if (e.target.closest('.item-action-btn')) return;
-                    playLikedVideo(url);
-                });
-                
-                const unlikeBtn = item.querySelector('.item-action-btn');
-                unlikeBtn.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    const urlToRemove = unlikeBtn.dataset.url;
-                    const actualIndex = likedVideos.indexOf(urlToRemove);
-                    
-                    if (actualIndex > -1) {
-                        likedVideos.splice(actualIndex, 1);
-                        localStorage.setItem('likedVideos', JSON.stringify(likedVideos));
-                        
-                        if (urlToRemove === videoUrls[currentIndex]) {
-                            likeBtn.classList.remove('liked');
-                        }
-                        
-                        updateFavListBtn();
-                        showToast('已取消');
-                        renderFavList();
-                    }
-                });
-                
-                favListContent.appendChild(item);
-            });
-        }
-        
-        async function playLikedVideo(targetUrl) {
-            loadingOverlay.classList.add('show');
-            hideAllModals();
-            
-            const categoryInfo = getCategoryFromUrl(targetUrl);
-            
-            if (!categoryInfo) {
-                video.src = targetUrl;
-                video.load();
-                video.play().catch(() => {});
-                loadingOverlay.classList.remove('show');
-                return;
-            }
-            
-            if (categoryInfo.index !== currentCategoryIndex) {
-                currentCategoryIndex = categoryInfo.index;
+            async function fetchVideoList() {
+                loading.style.display = 'block';
+                errorOverlay.classList.remove('show');
                 
                 try {
                     const api = API_LIST[currentCategoryIndex];
-                    const response = await fetch(api.url + '?t=' + Date.now());
+                    const url = api.url + '?t=' + Date.now();
+                    
+                    const response = await fetch(url);
+                    if (!response.ok) throw new Error(`HTTP错误: ${response.status}`);
+                    
                     const text = await response.text();
-                    videoUrls = parseVideoList(text);
-                } catch (err) {
-                    showToast('切换失败');
+                    const urls = parseVideoList(text);
+                    
+                    if (urls.length === 0) throw new Error('未找到有效的视频地址');
+                    
+                    videoUrls = urls;
+                    console.log(`[${api.name}] 成功加载 ${urls.length} 个视频`);
+                    
+                    if (currentIndex >= videoUrls.length) currentIndex = 0;
+                    
+                    loadVideo(currentIndex);
+                    updateFavListBtn();
+                    
+                } catch (error) {
+                    console.error('获取失败:', error);
+                    errorText.textContent = `获取[${API_LIST[currentCategoryIndex].name}]失败: ${error.message}`;
+                    errorOverlay.classList.add('show');
+                } finally {
+                    loading.style.display = 'none';
+                }
+            }
+            
+            function loadVideo(index) {
+                if (videoUrls.length === 0) return;
+                
+                if (index < 0) index = videoUrls.length - 1;
+                if (index >= videoUrls.length) index = 0;
+                
+                currentIndex = index;
+                const currentUrl = videoUrls[currentIndex];
+                
+                video.src = currentUrl;
+                video.load();
+                
+                // 自动播放
+                const playPromise = video.play();
+                if (playPromise !== undefined) {
+                    playPromise.then(() => {
+                        isPlaying = true;
+                        updatePlayIcon();
+                    }).catch(() => {
+                        isPlaying = false;
+                        updatePlayIcon();
+                    });
+                }
+                
+                videoTitle.textContent = '';  // 可扩展标题
+                videoDesc.textContent = `${currentIndex + 1} / ${videoUrls.length}`;
+                
+                likeBtn.classList.toggle('liked', isLiked(currentUrl));
+                
+                loading.style.display = 'block';
+            }
+            
+            function updatePlayIcon() {
+                if (isPlaying) {
+                    playIconSvg.innerHTML = '<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>';
+                } else {
+                    playIconSvg.innerHTML = '<path d="M8 5v14l11-7z"/>';
+                }
+            }
+            
+            function togglePlay() {
+                if (video.paused) {
+                    video.play().then(() => {
+                        isPlaying = true;
+                        updatePlayIcon();
+                        playIcon.classList.add('show');
+                        setTimeout(() => playIcon.classList.remove('show'), 500);
+                    }).catch(err => {
+                        console.error('播放失败:', err);
+                    });
+                } else {
+                    video.pause();
+                    isPlaying = false;
+                    updatePlayIcon();
+                    playIcon.classList.add('show');
+                    setTimeout(() => playIcon.classList.remove('show'), 500);
+                }
+            }
+            
+            function prevVideo() {
+                document.getElementById('prevHint').classList.add('show');
+                setTimeout(() => document.getElementById('prevHint').classList.remove('show'), 800);
+                loadVideo(currentIndex - 1);
+            }
+            
+            function nextVideo() {
+                document.getElementById('nextHint').classList.add('show');
+                setTimeout(() => document.getElementById('nextHint').classList.remove('show'), 800);
+                loadVideo(currentIndex + 1);
+            }
+            
+            function downloadVideo() {
+                if (videoUrls.length === 0) return;
+                const url = videoUrls[currentIndex];
+                
+                showToast('开始下载...');
+                
+                fetch(url)
+                    .then(response => response.blob())
+                    .then(blob => {
+                        const a = document.createElement('a');
+                        a.href = URL.createObjectURL(blob);
+                        a.download = `video_${currentIndex + 1}.mp4`;
+                        document.body.appendChild(a);
+                        a.click();
+                        document.body.removeChild(a);
+                        showToast('下载完成');
+                    })
+                    .catch(() => {
+                        window.open(url, '_blank');
+                        showToast('已在新窗口打开');
+                    });
+            }
+            
+            function renderCategoryList() {
+                categoryList.innerHTML = '';
+                
+                API_LIST.forEach((api, index) => {
+                    const item = document.createElement('div');
+                    item.className = 'category-item';
+                    if (index === currentCategoryIndex) item.classList.add('active');
+                    
+                    item.innerHTML = `
+                        <div class="category-icon">${api.icon}</div>
+                        <div class="category-name">${api.name}</div>
+                    `;
+                    
+                    item.addEventListener('click', () => {
+                        currentCategoryIndex = index;
+                        currentIndex = 0;
+                        fetchVideoList();
+                        hideAllModals();
+                    });
+                    
+                    categoryList.appendChild(item);
+                });
+            }
+            
+            function getFileName(url) {
+                try {
+                    return url.split('/').pop().split('?')[0] || '未知视频';
+                } catch {
+                    return '未知视频';
+                }
+            }
+            
+            function getCategoryFromUrl(url) {
+                for (let i = 0; i < API_LIST.length; i++) {
+                    const apiFileName = API_LIST[i].url.split('/').pop().replace('.txt', '');
+                    if (url.includes(apiFileName)) {
+                        return { index: i, name: API_LIST[i].name, api: API_LIST[i] };
+                    }
+                }
+                return null;
+            }
+            
+            function renderFavList() {
+                favListContent.innerHTML = '';
+                favListCount.textContent = likedVideos.length;
+                
+                if (likedVideos.length === 0) {
+                    favListContent.innerHTML = `
+                        <div class="empty-state">
+                            <div style="font-size: 48px; margin-bottom: 10px;">💔</div>
+                            <div>暂无喜欢的视频</div>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                const reversedLiked = [...likedVideos].reverse();
+                
+                reversedLiked.forEach((url) => {
+                    const categoryInfo = getCategoryFromUrl(url);
+                    const categoryName = categoryInfo ? categoryInfo.name : '未知分类';
+                    const fileName = getFileName(url);
+                    
+                    const item = document.createElement('div');
+                    item.className = 'video-item';
+                    
+                    const isCurrentPlaying = (url === video.src);
+                    if (isCurrentPlaying) {
+                        item.classList.add('active');
+                    }
+                    
+                    item.innerHTML = `
+                        <div class="item-thumb">🎬</div>
+                        <div class="item-info">
+                            <div class="item-title">${fileName.substring(0, 25)}</div>
+                            <div class="item-meta">
+                                <span style="color: ${categoryInfo ? '#fe2c55' : '#888'}">${categoryName}</span>
+                                ${isCurrentPlaying ? '<span class="item-status"> ● 播放中</span>' : ''}
+                            </div>
+                        </div>
+                        <div class="item-actions">
+                            <button class="item-action-btn liked" data-url="${url}" title="取消喜欢">
+                                <svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+                            </button>
+                        </div>
+                    `;
+                    
+                    item.addEventListener('click', (e) => {
+                        if (e.target.closest('.item-action-btn')) return;
+                        playLikedVideo(url);
+                    });
+                    
+                    const unlikeBtn = item.querySelector('.item-action-btn');
+                    unlikeBtn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        const urlToRemove = unlikeBtn.dataset.url;
+                        const actualIndex = likedVideos.indexOf(urlToRemove);
+                        
+                        if (actualIndex > -1) {
+                            likedVideos.splice(actualIndex, 1);
+                            localStorage.setItem('likedVideos', JSON.stringify(likedVideos));
+                            
+                            if (urlToRemove === videoUrls[currentIndex]) {
+                                likeBtn.classList.remove('liked');
+                            }
+                            
+                            updateFavListBtn();
+                            showToast('已取消');
+                            renderFavList();
+                        }
+                    });
+                    
+                    favListContent.appendChild(item);
+                });
+            }
+            
+            async function playLikedVideo(targetUrl) {
+                loadingOverlay.classList.add('show');
+                hideAllModals();
+                
+                const categoryInfo = getCategoryFromUrl(targetUrl);
+                
+                if (!categoryInfo) {
+                    video.src = targetUrl;
+                    video.load();
+                    video.play().catch(() => {});
                     loadingOverlay.classList.remove('show');
                     return;
                 }
-            }
-            
-            const videoIndex = videoUrls.indexOf(targetUrl);
-            
-            if (videoIndex !== -1) {
-                currentIndex = videoIndex;
-                loadVideo(currentIndex);
-            } else {
-                videoUrls.unshift(targetUrl);
-                currentIndex = 0;
-                loadVideo(0);
-            }
-            
-            loadingOverlay.classList.remove('show');
-        }
-        
-        function showCategoryList() {
-            renderCategoryList();
-            categoryModal.classList.add('show');
-        }
-        
-        function showFavList() {
-            renderFavList();
-            favListModal.classList.add('show');
-        }
-        
-        function hideAllModals() {
-            categoryModal.classList.remove('show');
-            favListModal.classList.remove('show');
-        }
-        
-        touchLayer.addEventListener('touchstart', (e) => {
-            isTouching = true;
-            hasMoved = false;
-            touchStartX = e.touches[0].clientX;
-            touchStartY = e.touches[0].clientY;
-            touchStartTime = Date.now();
-        }, { passive: true });
-        
-        touchLayer.addEventListener('touchmove', (e) => {
-            if (!isTouching) return;
-            const touchX = e.touches[0].clientX;
-            const touchY = e.touches[0].clientY;
-            const diffX = Math.abs(touchX - touchStartX);
-            const diffY = Math.abs(touchY - touchStartY);
-            
-            if (diffX > 10 || diffY > 10) {
-                hasMoved = true;
-            }
-        }, { passive: true });
-        
-        touchLayer.addEventListener('touchend', (e) => {
-            if (!isTouching) return;
-            isTouching = false;
-            
-            const touchEndX = e.changedTouches[0].clientX;
-            const touchEndY = e.changedTouches[0].clientY;
-            const diffX = touchStartX - touchEndX;
-            const diffY = touchStartY - touchEndY;
-            const duration = Date.now() - touchStartTime;
-            
-            if (Math.abs(diffX) > 50 || Math.abs(diffY) > 50) {
-                if (Math.abs(diffX) > Math.abs(diffY)) {
-                    if (diffX > 0) {
-                        switchCategory(1);
+                
+                if (categoryInfo.index !== currentCategoryIndex) {
+                    currentCategoryIndex = categoryInfo.index;
+                    
+                    try {
+                        const api = API_LIST[currentCategoryIndex];
+                        const response = await fetch(api.url + '?t=' + Date.now());
+                        const text = await response.text();
+                        videoUrls = parseVideoList(text);
+                    } catch (err) {
+                        showToast('切换失败');
+                        loadingOverlay.classList.remove('show');
+                        return;
                     }
+                }
+                
+                const videoIndex = videoUrls.indexOf(targetUrl);
+                
+                if (videoIndex !== -1) {
+                    currentIndex = videoIndex;
+                    loadVideo(currentIndex);
                 } else {
-                    if (diffY > 0) nextVideo();
-                    else prevVideo();
-                }
-                return;
-            }
-            
-            if (!hasMoved && duration < 300) {
-                const currentTime = Date.now();
-                const timeSinceLastTap = currentTime - lastTapTime;
-                
-                tapCount++;
-                
-                if (tapCount === 1) {
-                    tapTimeout = setTimeout(() => {
-                        tapCount = 0;
-                    }, 250);
-                } else if (tapCount === 2 && timeSinceLastTap < 250) {
-                    clearTimeout(tapTimeout);
-                    tapCount = 0;
-                    togglePlay();
+                    videoUrls.unshift(targetUrl);
+                    currentIndex = 0;
+                    loadVideo(0);
                 }
                 
-                lastTapTime = currentTime;
+                loadingOverlay.classList.remove('show');
             }
-        }, { passive: true });
-        
-        let mouseDown = false;
-        let mouseMoved = false;
-        
-        touchLayer.addEventListener('mousedown', (e) => {
-            mouseDown = true;
-            mouseMoved = false;
-            touchStartX = e.clientX;
-            touchStartY = e.clientY;
-            touchStartTime = Date.now();
-        });
-        
-        touchLayer.addEventListener('mousemove', (e) => {
-            if (!mouseDown) return;
-            const diffX = Math.abs(e.clientX - touchStartX);
-            const diffY = Math.abs(e.clientY - touchStartY);
-            if (diffX > 10 || diffY > 10) mouseMoved = true;
-        });
-        
-        touchLayer.addEventListener('mouseup', (e) => {
-            if (!mouseDown) return;
-            mouseDown = false;
             
-            const diffX = touchStartX - e.clientX;
-            const diffY = touchStartY - e.clientY;
-            const duration = Date.now() - touchStartTime;
+            function showCategoryList() {
+                renderCategoryList();
+                categoryModal.classList.add('show');
+            }
             
-            if (Math.abs(diffX) > 50 || Math.abs(diffY) > 50) {
-                if (Math.abs(diffX) > Math.abs(diffY)) {
-                    if (diffX > 0) {
-                        switchCategory(1);
+            function showFavList() {
+                renderFavList();
+                favListModal.classList.add('show');
+            }
+            
+            function hideAllModals() {
+                categoryModal.classList.remove('show');
+                favListModal.classList.remove('show');
+            }
+            
+            // ----- 手势处理 (左右滑动切换分类，上下滑动切换视频) -----
+            touchLayer.addEventListener('touchstart', (e) => {
+                isTouching = true;
+                hasMoved = false;
+                touchStartX = e.touches[0].clientX;
+                touchStartY = e.touches[0].clientY;
+                touchStartTime = Date.now();
+            }, { passive: true });
+            
+            touchLayer.addEventListener('touchmove', (e) => {
+                if (!isTouching) return;
+                const touchX = e.touches[0].clientX;
+                const touchY = e.touches[0].clientY;
+                const diffX = Math.abs(touchX - touchStartX);
+                const diffY = Math.abs(touchY - touchStartY);
+                
+                if (diffX > 10 || diffY > 10) {
+                    hasMoved = true;
+                }
+            }, { passive: true });
+            
+            touchLayer.addEventListener('touchend', (e) => {
+                if (!isTouching) return;
+                isTouching = false;
+                
+                const touchEndX = e.changedTouches[0].clientX;
+                const touchEndY = e.changedTouches[0].clientY;
+                const diffX = touchStartX - touchEndX;
+                const diffY = touchStartY - touchEndY;
+                const duration = Date.now() - touchStartTime;
+                
+                // 检测滑动 (大于50px)
+                if (Math.abs(diffX) > 50 || Math.abs(diffY) > 50) {
+                    if (Math.abs(diffX) > Math.abs(diffY)) {
+                        // 左右滑动切换分类
+                        if (diffX > 0) {
+                            // 向左滑 (手指向左移动 => diffX>0) => 下一个分类
+                            switchCategory(1);   // 下一个分类
+                        } else {
+                            // 向右滑 => 上一个分类
+                            switchCategory(-1);  // 上一个分类
+                        }
+                    } else {
+                        // 上下滑动切换视频
+                        if (diffY > 0) {
+                            // 向上滑 (手指向上移动 => diffY>0) => 下一个视频
+                            nextVideo();
+                        } else {
+                            // 向下滑 => 上一个视频
+                            prevVideo();
+                        }
                     }
-                } else {
-                    if (diffY > 0) nextVideo();
-                    else prevVideo();
+                    return;
                 }
-                return;
-            }
-            
-            if (!mouseMoved && duration < 300) {
-                const currentTime = Date.now();
-                const timeSinceLastTap = currentTime - lastTapTime;
                 
-                tapCount++;
-                
-                if (tapCount === 1) {
-                    tapTimeout = setTimeout(() => {
+                // 轻点处理 (双击切换播放/暂停)
+                if (!hasMoved && duration < 300) {
+                    const currentTime = Date.now();
+                    const timeSinceLastTap = currentTime - lastTapTime;
+                    
+                    tapCount++;
+                    
+                    if (tapCount === 1) {
+                        tapTimeout = setTimeout(() => {
+                            tapCount = 0;
+                        }, 250);
+                    } else if (tapCount === 2 && timeSinceLastTap < 250) {
+                        clearTimeout(tapTimeout);
                         tapCount = 0;
-                    }, 250);
-                } else if (tapCount === 2 && timeSinceLastTap < 250) {
-                    clearTimeout(tapTimeout);
-                    tapCount = 0;
-                    togglePlay();
+                        togglePlay();
+                    }
+                    
+                    lastTapTime = currentTime;
+                }
+            }, { passive: true });
+            
+            // 鼠标事件模拟 (PC)
+            let mouseDown = false;
+            let mouseMoved = false;
+            
+            touchLayer.addEventListener('mousedown', (e) => {
+                mouseDown = true;
+                mouseMoved = false;
+                touchStartX = e.clientX;
+                touchStartY = e.clientY;
+                touchStartTime = Date.now();
+            });
+            
+            touchLayer.addEventListener('mousemove', (e) => {
+                if (!mouseDown) return;
+                const diffX = Math.abs(e.clientX - touchStartX);
+                const diffY = Math.abs(e.clientY - touchStartY);
+                if (diffX > 10 || diffY > 10) mouseMoved = true;
+            });
+            
+            touchLayer.addEventListener('mouseup', (e) => {
+                if (!mouseDown) return;
+                mouseDown = false;
+                
+                const diffX = touchStartX - e.clientX;
+                const diffY = touchStartY - e.clientY;
+                const duration = Date.now() - touchStartTime;
+                
+                if (Math.abs(diffX) > 50 || Math.abs(diffY) > 50) {
+                    if (Math.abs(diffX) > Math.abs(diffY)) {
+                        if (diffX > 0) {
+                            switchCategory(1);
+                        } else {
+                            switchCategory(-1);
+                        }
+                    } else {
+                        if (diffY > 0) nextVideo();
+                        else prevVideo();
+                    }
+                    return;
                 }
                 
-                lastTapTime = currentTime;
-            }
-        });
-        
-        video.addEventListener('waiting', () => loading.style.display = 'block');
-        video.addEventListener('playing', () => {
-            loading.style.display = 'none';
-            isPlaying = true;
-        });
-        video.addEventListener('pause', () => {
-            isPlaying = false;
-        });
-        video.addEventListener('canplay', () => loading.style.display = 'none');
-        video.addEventListener('timeupdate', () => {
-            if (video.duration) {
-                progressBar.style.width = (video.currentTime / video.duration * 100) + '%';
-            }
-        });
-        video.addEventListener('ended', nextVideo);
-        video.addEventListener('error', () => {
-            loading.style.display = 'none';
-            errorText.textContent = '视频加载失败';
-            errorOverlay.classList.add('show');
-        });
-        
-        likeBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            toggleLike();
-        });
-        
-        document.getElementById('shareBtn').addEventListener('click', (e) => {
-            e.stopPropagation();
-            shareVideo();
-        });
-        
-        document.getElementById('downloadBtn').addEventListener('click', (e) => {
-            e.stopPropagation();
-            downloadVideo();
-        });
-        
-        favListBtn.addEventListener('click', showFavList);
-        categoryListBtn.addEventListener('click', showCategoryList);
-        document.getElementById('closeCategory').addEventListener('click', hideAllModals);
-        document.getElementById('closeFavList').addEventListener('click', hideAllModals);
-        document.getElementById('retryBtn').addEventListener('click', fetchVideoList);
-        
-        document.addEventListener('keydown', (e) => {
-            switch(e.key) {
-                case ' ': 
-                    e.preventDefault();
-                    togglePlay(); 
-                    break;
-                case 'ArrowUp': prevVideo(); break;
-                case 'ArrowDown': nextVideo(); break;
-                case 'ArrowLeft': switchCategory(1); break;
-                case 'l': toggleLike(); break;
-                case 'Escape': hideAllModals(); break;
-            }
-        });
-        
-        updateFavListBtn();
-        fetchVideoList();
+                if (!mouseMoved && duration < 300) {
+                    const currentTime = Date.now();
+                    const timeSinceLastTap = currentTime - lastTapTime;
+                    
+                    tapCount++;
+                    
+                    if (tapCount === 1) {
+                        tapTimeout = setTimeout(() => {
+                            tapCount = 0;
+                        }, 250);
+                    } else if (tapCount === 2 && timeSinceLastTap < 250) {
+                        clearTimeout(tapTimeout);
+                        tapCount = 0;
+                        togglePlay();
+                    }
+                    
+                    lastTapTime = currentTime;
+                }
+            });
+            
+            // 视频事件
+            video.addEventListener('waiting', () => loading.style.display = 'block');
+            video.addEventListener('playing', () => {
+                loading.style.display = 'none';
+                isPlaying = true;
+            });
+            video.addEventListener('pause', () => {
+                isPlaying = false;
+            });
+            video.addEventListener('canplay', () => loading.style.display = 'none');
+            video.addEventListener('timeupdate', () => {
+                if (video.duration) {
+                    progressBar.style.width = (video.currentTime / video.duration * 100) + '%';
+                }
+            });
+            // 自动播放下一个
+            video.addEventListener('ended', nextVideo);
+            video.addEventListener('error', () => {
+                loading.style.display = 'none';
+                errorText.textContent = '视频加载失败';
+                errorOverlay.classList.add('show');
+            });
+            
+            // 按钮事件
+            likeBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                toggleLike();
+            });
+            
+            document.getElementById('shareBtn').addEventListener('click', (e) => {
+                e.stopPropagation();
+                shareVideo();
+            });
+            
+            document.getElementById('downloadBtn').addEventListener('click', (e) => {
+                e.stopPropagation();
+                downloadVideo();
+            });
+            
+            favListBtn.addEventListener('click', showFavList);
+            categoryListBtn.addEventListener('click', showCategoryList);
+            document.getElementById('closeCategory').addEventListener('click', hideAllModals);
+            document.getElementById('closeFavList').addEventListener('click', hideAllModals);
+            document.getElementById('retryBtn').addEventListener('click', fetchVideoList);
+            
+            // 键盘支持
+            document.addEventListener('keydown', (e) => {
+                switch(e.key) {
+                    case ' ': 
+                        e.preventDefault();
+                        togglePlay(); 
+                        break;
+                    case 'ArrowUp': prevVideo(); break;
+                    case 'ArrowDown': nextVideo(); break;
+                    case 'ArrowLeft': switchCategory(-1); break;  // 左键上一个分类
+                    case 'ArrowRight': switchCategory(1); break;  // 右键下一个分类
+                    case 'l': toggleLike(); break;
+                    case 'Escape': hideAllModals(); break;
+                }
+            });
+            
+            // 初始化
+            updateFavListBtn();
+            // 默认分类索引0已经是热舞，直接加载
+            fetchVideoList();
+        })();
     </script>
 </body>
 </html>
