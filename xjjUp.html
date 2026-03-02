@@ -1,0 +1,3048 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+   <meta charset="UTF-8">
+   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+   <title>小姐姐短视频</title>
+   <!-- Font Awesome 6 (免费图标库) -->
+   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+   <!-- Google Material Icons -->
+   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+   <style>
+       * {
+           margin: 0;
+           padding: 0;
+           box-sizing: border-box;
+           -webkit-tap-highlight-color: transparent;
+       }
+       
+       :root {
+           --primary: #fe2c55;
+           --primary-light: #ff4d6d;
+           --bg-dark: #000;
+           --text-light: #fff;
+           --text-gray: rgba(255,255,255,0.6);
+           --error-color: #f44336;
+           --timeout-color: #ff9800;
+           --success-color: #4caf50;
+       }
+       
+       html, body {
+           height: 100%;
+           overflow: hidden;
+           background: var(--bg-dark);
+           font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+       }
+       
+       .app-container {
+           height: 100vh;
+           width: 100vw;
+           position: relative;
+           overflow: hidden;
+       }
+       
+       /* 视频滑动容器 */
+       .video-slider {
+           height: 100%;
+           width: 100%;
+           position: relative;
+           touch-action: pan-y;
+       }
+       
+       .video-item {
+           height: 100%;
+           width: 100%;
+           position: absolute;
+           top: 0;
+           left: 0;
+           opacity: 0;
+           transition: opacity 0.3s;
+           display: flex;
+           align-items: center;
+           justify-content: center;
+           background: #000;
+       }
+       
+       .video-item.active {
+           opacity: 1;
+           z-index: 10;
+       }
+       
+       .video-item.prev {
+           transform: translateY(-100%);
+       }
+       
+       .video-item.next {
+           transform: translateY(100%);
+       }
+       
+       video {
+           width: 100%;
+           height: 100%;
+           object-fit: cover;
+           max-height: 100vh;
+           background: #000;
+       }
+       
+       /* 全屏阴影效果 */
+       .video-item::before {
+           content: '';
+           position: absolute;
+           top: 0;
+           left: 0;
+           right: 0;
+           bottom: 0;
+           background: radial-gradient(circle at center, transparent 30%, rgba(0,0,0,0.8) 100%);
+           pointer-events: none;
+           z-index: 15;
+           opacity: 0.9;
+           transition: opacity 0.3s;
+       }
+       
+       /* 额外的边缘光晕效果 */
+       .video-item::after {
+           content: '';
+           position: absolute;
+           top: 0;
+           left: 0;
+           right: 0;
+           bottom: 0;
+           background: linear-gradient(135deg, rgba(254,44,85,0.15) 0%, transparent 50%, rgba(0,0,0,0.4) 100%);
+           pointer-events: none;
+           z-index: 16;
+           opacity: 0.5;
+           mix-blend-mode: overlay;
+       }
+       
+       /* 视频信息覆盖层 */
+       .video-overlay {
+           position: absolute;
+           bottom: 35px;
+           left: 0;
+           right: 0;
+           padding: 20px 100px 15px 20px;
+           background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.4) 70%, transparent 100%);
+           z-index: 20;
+           pointer-events: none;
+           transition: opacity 0.3s, transform 0.3s;
+           text-shadow: 0 4px 12px rgba(0,0,0,0.8);
+       }
+       
+       .video-overlay.hidden {
+           opacity: 0;
+           transform: translateY(20px);
+           pointer-events: none;
+       }
+       
+       .series-name {
+           font-size: 1.1rem;
+           font-weight: 600;
+           color: var(--text-light);
+           margin-bottom: 6px;
+           text-shadow: 0 2px 8px rgba(0,0,0,0.9);
+           display: flex;
+           align-items: center;
+           gap: 6px;
+           letter-spacing: 0.3px;
+       }
+       
+       .series-name i {
+           font-size: 0.9rem;
+           color: var(--primary);
+           filter: drop-shadow(0 2px 6px rgba(254,44,85,0.6));
+       }
+       
+       .video-meta {
+           font-size: 0.85rem;
+           color: var(--text-gray);
+           display: flex;
+           align-items: center;
+           gap: 12px;
+           text-shadow: 0 2px 6px rgba(0,0,0,0.8);
+       }
+       
+       .tag {
+           background: rgba(254,44,85,0.3);
+           padding: 3px 10px;
+           border-radius: 30px;
+           font-size: 0.75rem;
+           backdrop-filter: blur(5px);
+           border: 1px solid rgba(255,255,255,0.15);
+           box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+       }
+       
+       .tag i {
+           margin-right: 4px;
+           font-size: 0.7rem;
+           filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+       }
+       
+       /* 顶部导航 - 统一按钮大小 */
+       .top-nav {
+           position: absolute;
+           top: 0;
+           left: 0;
+           right: 0;
+           padding: 15px 20px;
+           display: flex;
+           justify-content: space-between;
+           align-items: center;
+           z-index: 40;
+           background: linear-gradient(to bottom, rgba(0,0,0,0.8) 0%, transparent 100%);
+           transition: opacity 0.3s, transform 0.3s;
+           pointer-events: none;
+       }
+       
+       .top-nav.hidden {
+           opacity: 0;
+           transform: translateX(30px);
+           pointer-events: none;
+       }
+       
+       .nav-left, .nav-right {
+           display: flex;
+           gap: 12px;
+           pointer-events: auto;
+       }
+       
+       .nav-btn {
+           width: 40px;
+           height: 40px;
+           border-radius: 50%;
+           background: rgba(255,255,255,0.2);
+           backdrop-filter: blur(10px);
+           border: 1px solid rgba(255,255,255,0.3);
+           color: var(--text-light);
+           display: flex;
+           align-items: center;
+           justify-content: center;
+           cursor: pointer;
+           font-size: 1.2rem;
+           transition: all 0.3s;
+           position: relative;
+           box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+       }
+       
+       .nav-btn i {
+           font-size: 1.2rem;
+       }
+       
+       .nav-btn:hover {
+           background: var(--primary);
+           transform: scale(1.1);
+           border-color: var(--primary);
+           box-shadow: 0 12px 25px rgba(254,44,85,0.5);
+       }
+       
+       .nav-btn.active {
+           background: var(--primary);
+           border-color: var(--primary);
+       }
+       
+       .nav-btn .badge {
+           position: absolute;
+           top: -2px;
+           right: -2px;
+           background: var(--primary);
+           color: white;
+           font-size: 0.65rem;
+           padding: 2px 5px;
+           border-radius: 20px;
+           min-width: 18px;
+           text-align: center;
+           font-weight: bold;
+           border: 2px solid var(--bg-dark);
+           box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+       }
+       
+       /* 右侧操作栏 - 统一按钮大小 */
+       .action-sidebar {
+           position: absolute;
+           right: 12px;
+           bottom: 110px;
+           display: flex;
+           flex-direction: column;
+           align-items: center;
+           gap: 18px;
+           z-index: 30;
+           transition: opacity 0.3s, transform 0.3s;
+           filter: drop-shadow(0 10px 20px rgba(0,0,0,0.5));
+       }
+       
+       .action-sidebar.hidden {
+           opacity: 0;
+           transform: translateX(30px);
+           pointer-events: none;
+       }
+       
+       .action-btn {
+           display: flex;
+           flex-direction: column;
+           align-items: center;
+           gap: 4px;
+           cursor: pointer;
+           transition: transform 0.2s;
+           user-select: none;
+           filter: drop-shadow(0 4px 12px rgba(0,0,0,0.6));
+       }
+       
+       .action-btn:active {
+           transform: scale(0.9);
+       }
+       
+       .action-icon {
+           width: 40px;
+           height: 40px;
+           border-radius: 50%;
+           background: rgba(255,255,255,0.2);
+           backdrop-filter: blur(10px);
+           border: 1px solid rgba(255,255,255,0.3);
+           display: flex;
+           align-items: center;
+           justify-content: center;
+           font-size: 1.2rem;
+           transition: all 0.3s;
+           position: relative;
+           color: var(--text-light);
+           box-shadow: 0 8px 20px rgba(0,0,0,0.5);
+       }
+       
+       .action-btn.liked .action-icon {
+           background: var(--primary);
+           border-color: var(--primary);
+           animation: likeAnimation 0.5s ease;
+           box-shadow: 0 8px 25px rgba(254,44,85,0.6);
+       }
+       
+       .action-btn.loop-active .action-icon {
+           background: var(--primary);
+           border-color: var(--primary);
+           box-shadow: 0 8px 25px rgba(254,44,85,0.6);
+       }
+       
+       @keyframes likeAnimation {
+           0%, 100% { transform: scale(1); }
+           50% { transform: scale(1.3); }
+       }
+       
+       .action-count {
+           font-size: 0.7rem;
+           color: var(--text-light);
+           font-weight: 500;
+           text-shadow: 0 2px 6px rgba(0,0,0,0.8);
+           background: rgba(0,0,0,0.4);
+           padding: 3px 8px;
+           border-radius: 30px;
+           backdrop-filter: blur(5px);
+           border: 1px solid rgba(255,255,255,0.15);
+           box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+       }
+       
+       /* 进度条 */
+       .progress-container {
+           position: absolute;
+           bottom: 0;
+           left: 0;
+           right: 0;
+           height: 35px;
+           background: linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.6) 100%);
+           z-index: 35;
+           display: flex;
+           align-items: center;
+           padding: 0 15px;
+           cursor: pointer;
+           backdrop-filter: blur(3px);
+           border-top: none;
+           box-shadow: 0 -5px 20px rgba(0,0,0,0.8), inset 0 1px 2px rgba(255,255,255,0.1);
+       }
+       
+       .time-display {
+           color: var(--text-light);
+           font-size: 0.8rem;
+           font-weight: 500;
+           text-shadow: 0 2px 8px rgba(0,0,0,0.9);
+           min-width: 85px;
+           letter-spacing: 0.3px;
+           background: transparent;
+           padding: 4px 10px;
+           border-radius: 30px;
+           text-align: center;
+           border: none;
+           transition: all 0.2s;
+           position: relative;
+           z-index: 36;
+       }
+       
+       .time-display::before {
+           content: '';
+           position: absolute;
+           top: 0;
+           left: 0;
+           right: 0;
+           bottom: 0;
+           background: radial-gradient(circle at center, rgba(254,44,85,0.2) 0%, transparent 80%);
+           border-radius: 30px;
+           z-index: -1;
+           opacity: 0.5;
+       }
+       
+       .progress-bar-container {
+           flex: 1;
+           height: 4px;
+           background: rgba(255,255,255,0.2);
+           border-radius: 4px;
+           margin: 0 10px;
+           position: relative;
+           overflow: hidden;
+           box-shadow: inset 0 1px 3px rgba(0,0,0,0.5), 0 0 10px rgba(0,0,0,0.5);
+       }
+       
+       .progress-bar {
+           height: 100%;
+           background: linear-gradient(90deg, var(--primary), var(--primary-light));
+           width: 0%;
+           border-radius: 4px;
+           transition: width 0.1s linear;
+           position: relative;
+           box-shadow: 0 0 15px var(--primary);
+       }
+       
+       .progress-bar::after {
+           content: '';
+           position: absolute;
+           right: 0;
+           top: 50%;
+           transform: translateY(-50%);
+           width: 10px;
+           height: 10px;
+           background: white;
+           border-radius: 50%;
+           box-shadow: 0 0 20px var(--primary), 0 0 15px white;
+           border: 2px solid var(--primary);
+       }
+       
+       /* 模式指示器 */
+       .mode-indicator {
+           position: absolute;
+           top: 60px;
+           left: 50%;
+           transform: translateX(-50%);
+           background: rgba(254,44,85,0.95);
+           color: white;
+           padding: 8px 22px;
+           border-radius: 40px;
+           font-size: 0.9rem;
+           opacity: 0;
+           transition: opacity 0.3s;
+           z-index: 45;
+           pointer-events: none;
+           backdrop-filter: blur(8px);
+           border: 1px solid rgba(255,255,255,0.25);
+           box-shadow: 0 8px 25px rgba(254,44,85,0.5);
+           display: flex;
+           align-items: center;
+           gap: 8px;
+       }
+       
+       .mode-indicator i {
+           font-size: 1rem;
+       }
+       
+       .mode-indicator.show {
+           opacity: 1;
+       }
+       
+       /* 失败记录抽屉 - 美化图标 */
+       .failed-drawer {
+           position: fixed;
+           top: 0;
+           right: -100%;
+           width: 100%;
+           max-width: 420px;
+           height: 100vh;
+           background: rgba(0,0,0,0.95);
+           z-index: 100;
+           transition: right 0.3s ease;
+           display: flex;
+           flex-direction: column;
+           backdrop-filter: blur(20px);
+           box-shadow: -10px 0 50px rgba(0,0,0,0.8);
+       }
+       
+       .failed-drawer.open {
+           right: 0;
+       }
+       
+       .failed-drawer .drawer-header {
+           padding: 18px 20px;
+           border-bottom: 1px solid rgba(255,255,255,0.15);
+           display: flex;
+           justify-content: space-between;
+           align-items: center;
+           background: rgba(0,0,0,0.8);
+           backdrop-filter: blur(20px);
+           box-shadow: 0 5px 20px rgba(0,0,0,0.5);
+       }
+       
+       .failed-drawer .drawer-title {
+           display: flex;
+           align-items: center;
+           gap: 12px;
+           font-size: 1.2rem;
+           font-weight: 600;
+       }
+       
+       .failed-drawer .drawer-title .title-icon {
+           font-size: 1.8rem;
+           color: #ff9800;
+           filter: drop-shadow(0 0 15px rgba(255,152,0,0.5));
+           animation: floatIcon 3s ease-in-out infinite;
+       }
+       
+       @keyframes floatIcon {
+           0%, 100% { transform: translateY(0); }
+           50% { transform: translateY(-3px); }
+       }
+       
+       .failed-drawer .drawer-title span {
+           background: linear-gradient(135deg, #fff, #ff9800);
+           -webkit-background-clip: text;
+           -webkit-text-fill-color: transparent;
+           background-clip: text;
+       }
+       
+       .failed-drawer .drawer-close {
+           width: 36px;
+           height: 36px;
+           border-radius: 50%;
+           background: rgba(255,255,255,0.15);
+           border: 1px solid rgba(255,255,255,0.25);
+           color: var(--text-light);
+           font-size: 1.2rem;
+           cursor: pointer;
+           display: flex;
+           align-items: center;
+           justify-content: center;
+           transition: all 0.2s;
+           box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+       }
+       
+       .failed-drawer .drawer-close:hover {
+           background: var(--primary);
+           transform: rotate(90deg);
+           box-shadow: 0 6px 15px rgba(254,44,85,0.5);
+       }
+       
+       /* 失败记录分类标签 - 优化点击区域 */
+       .failed-tabs {
+           display: flex;
+           padding: 8px 10px 0 10px;
+           gap: 8px;
+           background: rgba(0,0,0,0.8);
+           cursor: pointer;
+       }
+       
+       .failed-tab {
+           flex: 1;
+           padding: 14px 12px;
+           text-align: center;
+           border-radius: 12px 12px 0 0;
+           cursor: pointer;
+           font-weight: 500;
+           transition: all 0.2s;
+           background: rgba(255,255,255,0.05);
+           color: var(--text-gray);
+           display: flex;
+           align-items: center;
+           justify-content: center;
+           gap: 8px;
+           border: 1px solid rgba(255,255,255,0.1);
+           border-bottom: none;
+           font-size: 0.95rem;
+           box-shadow: 0 -2px 10px rgba(0,0,0,0.3);
+           -webkit-tap-highlight-color: transparent;
+           user-select: none;
+           touch-action: manipulation;
+       }
+       
+       .failed-tab:active {
+           transform: scale(0.98);
+           background: rgba(255,255,255,0.1);
+       }
+       
+       .failed-tab i {
+           font-size: 1.2rem;
+           filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+           pointer-events: none;
+       }
+       
+       .failed-tab span {
+           pointer-events: none;
+       }
+       
+       .failed-tab.active {
+           background: rgba(254,44,85,0.2);
+           color: var(--primary);
+           border-color: rgba(254,44,85,0.3);
+       }
+       
+       .failed-tab.error-tab.active {
+           background: rgba(244,67,54,0.2);
+           color: #f44336;
+           border-color: rgba(244,67,54,0.3);
+       }
+       
+       .failed-tab.timeout-tab.active {
+           background: rgba(255,152,0,0.2);
+           color: #ff9800;
+           border-color: rgba(255,152,0,0.3);
+       }
+       
+       .failed-tab .count {
+           margin-left: 5px;
+           font-size: 0.9rem;
+           opacity: 0.9;
+           background: rgba(255,255,255,0.15);
+           padding: 3px 8px;
+           border-radius: 20px;
+           box-shadow: inset 0 1px 3px rgba(0,0,0,0.3);
+           pointer-events: none;
+       }
+       
+       /* 失败列表容器 - 支持滑动 */
+       .failed-list-wrapper {
+           flex: 1;
+           position: relative;
+           overflow: hidden;
+           background: rgba(0,0,0,0.7);
+       }
+       
+       .failed-list-container {
+           position: absolute;
+           top: 0;
+           left: 0;
+           right: 0;
+           bottom: 0;
+           display: flex;
+           flex-direction: column;
+           overflow: hidden;
+           transition: transform 0.3s ease;
+           will-change: transform;
+       }
+       
+       .failed-list-header {
+           display: flex;
+           justify-content: space-between;
+           align-items: center;
+           padding: 12px 15px;
+           background: rgba(255,255,255,0.02);
+           border-bottom: 1px solid rgba(255,255,255,0.08);
+           box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+           flex-shrink: 0;
+       }
+       
+       .failed-list-header .title {
+           font-size: 0.9rem;
+           color: var(--text-gray);
+           display: flex;
+           align-items: center;
+           gap: 6px;
+           text-shadow: 0 2px 5px rgba(0,0,0,0.5);
+       }
+       
+       .failed-list-header .title i {
+           font-size: 1rem;
+           filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+       }
+       
+       .failed-list-header .action-btn {
+           padding: 5px 12px;
+           border-radius: 30px;
+           border: none;
+           font-size: 0.85rem;
+           cursor: pointer;
+           transition: all 0.2s;
+           display: inline-flex;
+           align-items: center;
+           gap: 5px;
+           font-weight: 500;
+           white-space: nowrap;
+           box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+       }
+       
+       .failed-list-header .clear-all {
+           background: rgba(244,67,54,0.2);
+           color: #f44336;
+           border: 1px solid rgba(244,67,54,0.3);
+       }
+       
+       .failed-list-header .clear-all:hover {
+           background: #f44336;
+           color: white;
+           box-shadow: 0 6px 15px rgba(244,67,54,0.5);
+       }
+       
+       .failed-list-header .retry-all {
+           background: rgba(255,152,0,0.2);
+           color: #ff9800;
+           border: 1px solid rgba(255,152,0,0.3);
+       }
+       
+       .failed-list-header .retry-all:hover {
+           background: #ff9800;
+           color: white;
+           box-shadow: 0 6px 15px rgba(255,152,0,0.5);
+       }
+       
+       .failed-list {
+           flex: 1;
+           overflow-y: auto;
+           padding: 10px;
+       }
+       
+       .failed-item {
+           display: flex;
+           align-items: center;
+           padding: 12px;
+           border-radius: 14px;
+           margin-bottom: 8px;
+           background: rgba(255,255,255,0.03);
+           position: relative;
+           border: 1px solid rgba(255,255,255,0.08);
+           transition: all 0.2s;
+           box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+       }
+       
+       .failed-item:hover {
+           background: rgba(255,255,255,0.05);
+           transform: translateX(-5px);
+           box-shadow: 0 6px 18px rgba(0,0,0,0.6);
+       }
+       
+       .failed-item.error-item {
+           border-left: 3px solid #f44336;
+       }
+       
+       .failed-item.timeout-item {
+           border-left: 3px solid #ff9800;
+       }
+       
+       .failed-info {
+           flex: 1;
+           min-width: 0;
+       }
+       
+       .failed-name {
+           font-weight: 500;
+           margin-bottom: 4px;
+           font-size: 0.95rem;
+           display: flex;
+           align-items: center;
+           gap: 6px;
+           text-shadow: 0 2px 5px rgba(0,0,0,0.5);
+       }
+       
+       .failed-name i {
+           font-size: 0.85rem;
+           filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+       }
+       
+       .failed-item.error-item .failed-name {
+           color: #f44336;
+       }
+       
+       .failed-item.error-item .failed-name i {
+           color: #f44336;
+       }
+       
+       .failed-item.timeout-item .failed-name {
+           color: #ff9800;
+       }
+       
+       .failed-item.timeout-item .failed-name i {
+           color: #ff9800;
+       }
+       
+       .failed-meta {
+           font-size: 0.75rem;
+           color: var(--text-gray);
+           display: flex;
+           flex-direction: column;
+           gap: 3px;
+           text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+       }
+       
+       .failed-reason {
+           display: inline-block;
+           padding: 2px 8px;
+           border-radius: 20px;
+           font-size: 0.7rem;
+           align-self: flex-start;
+           box-shadow: inset 0 1px 3px rgba(0,0,0,0.3);
+       }
+       
+       .failed-item.error-item .failed-reason {
+           background: rgba(244,67,54,0.15);
+           color: #f44336;
+           border: 1px solid rgba(244,67,54,0.2);
+       }
+       
+       .failed-item.timeout-item .failed-reason {
+           background: rgba(255,152,0,0.15);
+           color: #ff9800;
+           border: 1px solid rgba(255,152,0,0.2);
+       }
+       
+       .failed-retry {
+           width: 36px;
+           height: 36px;
+           border-radius: 50%;
+           background: rgba(255,152,0,0.15);
+           border: 1px solid rgba(255,152,0,0.3);
+           color: #ff9800;
+           display: flex;
+           align-items: center;
+           justify-content: center;
+           cursor: pointer;
+           flex-shrink: 0;
+           margin-right: 6px;
+           transition: all 0.3s;
+           font-size: 1.1rem;
+           box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+       }
+       
+       .failed-retry:hover {
+           background: #ff9800;
+           color: white;
+           transform: rotate(180deg);
+           box-shadow: 0 6px 15px rgba(255,152,0,0.6);
+       }
+       
+       .failed-remove {
+           width: 36px;
+           height: 36px;
+           border-radius: 50%;
+           background: rgba(255,255,255,0.08);
+           border: 1px solid rgba(255,255,255,0.15);
+           color: var(--text-gray);
+           display: flex;
+           align-items: center;
+           justify-content: center;
+           cursor: pointer;
+           flex-shrink: 0;
+           transition: all 0.2s;
+           font-size: 1.1rem;
+           box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+       }
+       
+       .failed-remove:hover {
+           background: #f44336;
+           color: white;
+           border-color: #f44336;
+           box-shadow: 0 6px 15px rgba(244,67,54,0.6);
+       }
+       
+       .empty-failed {
+           text-align: center;
+           padding: 50px 20px;
+           color: var(--text-gray);
+           text-shadow: 0 2px 8px rgba(0,0,0,0.8);
+       }
+       
+       .empty-failed .icon {
+           font-size: 4rem;
+           margin-bottom: 15px;
+           opacity: 0.7;
+           color: #4caf50;
+           filter: drop-shadow(0 10px 25px rgba(76,175,80,0.4));
+       }
+       
+       /* 喜欢列表侧边栏 */
+       .favorites-drawer {
+           position: fixed;
+           top: 0;
+           left: -100%;
+           width: 100%;
+           max-width: 420px;
+           height: 100vh;
+           background: rgba(0,0,0,0.95);
+           z-index: 100;
+           transition: left 0.3s ease;
+           display: flex;
+           flex-direction: column;
+           backdrop-filter: blur(20px);
+           box-shadow: 10px 0 50px rgba(0,0,0,0.8);
+           overflow: hidden;
+       }
+       
+       .favorites-drawer.open {
+           left: 0;
+       }
+       
+       .favorites-drawer .drawer-header {
+           padding: 20px 20px;
+           border-bottom: 1px solid rgba(255,255,255,0.15);
+           background: rgba(0,0,0,0.8);
+           backdrop-filter: blur(20px);
+           position: relative;
+           box-shadow: 0 5px 20px rgba(0,0,0,0.5);
+           flex-shrink: 0;
+       }
+       
+       .favorites-drawer .title-row {
+           display: flex;
+           align-items: center;
+           justify-content: space-between;
+           margin-bottom: 16px;
+       }
+       
+       .favorites-drawer .title-row .title-section {
+           display: flex;
+           align-items: center;
+           gap: 10px;
+       }
+       
+       .favorites-drawer .title-row .heart-icon {
+           color: var(--primary);
+           font-size: 1.5rem;
+           width: 40px;
+           height: 40px;
+           display: flex;
+           align-items: center;
+           justify-content: center;
+           background: rgba(254,44,85,0.15);
+           border-radius: 50%;
+           border: 1px solid rgba(254,44,85,0.3);
+           box-shadow: 0 4px 15px rgba(254,44,85,0.3);
+       }
+       
+       .favorites-drawer .title-row .main-title {
+           font-size: 1.3rem;
+           font-weight: 600;
+           color: var(--text-light);
+           text-shadow: 0 2px 8px rgba(0,0,0,0.8);
+           white-space: nowrap;
+       }
+       
+       .favorites-drawer .title-row .close-btn {
+           width: 36px;
+           height: 36px;
+           border-radius: 50%;
+           background: rgba(255,255,255,0.15);
+           border: 1px solid rgba(255,255,255,0.25);
+           color: var(--text-light);
+           font-size: 1.2rem;
+           cursor: pointer;
+           display: flex;
+           align-items: center;
+           justify-content: center;
+           transition: all 0.2s;
+           box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+           flex-shrink: 0;
+       }
+       
+       .favorites-drawer .title-row .close-btn:hover {
+           background: var(--primary);
+           transform: rotate(90deg);
+           box-shadow: 0 6px 15px rgba(254,44,85,0.5);
+       }
+       
+       .favorites-drawer .buttons-row {
+           display: flex;
+           justify-content: space-between;
+           align-items: center;
+           width: 100%;
+           gap: 12px;
+       }
+       
+       .favorites-drawer .like-count-btn {
+           display: inline-flex;
+           align-items: center;
+           gap: 8px;
+           background: rgba(255,255,255,0.08);
+           padding: 8px 20px;
+           border-radius: 40px;
+           border: 1px solid rgba(255,255,255,0.15);
+           box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+           cursor: pointer;
+           transition: all 0.2s;
+           flex: 1;
+           justify-content: center;
+           white-space: nowrap;
+       }
+       
+       .favorites-drawer .like-count-btn:hover {
+           background: rgba(255,255,255,0.12);
+           transform: scale(1.02);
+       }
+       
+       .favorites-drawer .like-count-btn i {
+           color: var(--primary);
+           font-size: 1rem;
+           filter: drop-shadow(0 2px 5px rgba(254,44,85,0.5));
+       }
+       
+       .favorites-drawer .like-count-btn span {
+           color: var(--text-light);
+           font-size: 1rem;
+           font-weight: 500;
+           text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+       }
+       
+       .favorites-drawer .like-count-btn .count {
+           color: var(--primary);
+           font-weight: 600;
+           margin-left: 6px;
+           background: rgba(254,44,85,0.2);
+           padding: 3px 10px;
+           border-radius: 30px;
+           box-shadow: inset 0 1px 3px rgba(0,0,0,0.3);
+       }
+       
+       .favorites-drawer .play-all-btn {
+           background: var(--primary);
+           color: white;
+           border: none;
+           padding: 8px 24px;
+           border-radius: 40px;
+           font-size: 1rem;
+           font-weight: 500;
+           display: inline-flex;
+           align-items: center;
+           gap: 8px;
+           cursor: pointer;
+           transition: all 0.3s;
+           box-shadow: 0 8px 20px rgba(254,44,85,0.5);
+           border: 1px solid rgba(255,255,255,0.2);
+           flex: 1;
+           justify-content: center;
+           white-space: nowrap;
+       }
+       
+       .favorites-drawer .play-all-btn i {
+           font-size: 0.95rem;
+           filter: drop-shadow(0 2px 5px rgba(0,0,0,0.3));
+       }
+       
+       .favorites-drawer .play-all-btn:hover {
+           background: #ff4d6d;
+           transform: scale(1.02);
+           box-shadow: 0 12px 25px rgba(254,44,85,0.7);
+       }
+       
+       .favorites-drawer .play-all-btn:active {
+           transform: scale(0.98);
+       }
+       
+       .favorites-list {
+           flex: 1;
+           overflow-y: auto;
+           padding: 10px;
+           -webkit-overflow-scrolling: touch;
+       }
+       
+       .favorite-item {
+           display: flex;
+           align-items: center;
+           padding: 12px;
+           border-radius: 18px;
+           margin-bottom: 8px;
+           background: rgba(255,255,255,0.03);
+           cursor: pointer;
+           transition: all 0.3s;
+           position: relative;
+           overflow: hidden;
+           border: 1px solid rgba(255,255,255,0.08);
+           box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+       }
+       
+       .favorite-item:hover {
+           background: rgba(255,255,255,0.05);
+           transform: translateX(5px);
+           border-color: rgba(255,255,255,0.15);
+           box-shadow: 0 6px 20px rgba(0,0,0,0.6);
+       }
+       
+       .favorite-item.active {
+           background: linear-gradient(135deg, rgba(254,44,85,0.2), rgba(255,77,109,0.1));
+           border: 1px solid var(--primary);
+           box-shadow: 0 8px 20px rgba(254,44,85,0.3);
+       }
+       
+       .favorite-thumb {
+           width: 60px;
+           height: 60px;
+           border-radius: 14px;
+           background: linear-gradient(135deg, #2a2a2a, #3a3a3a);
+           display: flex;
+           align-items: center;
+           justify-content: center;
+           font-size: 1.8rem;
+           margin-right: 12px;
+           flex-shrink: 0;
+           position: relative;
+           overflow: hidden;
+           box-shadow: 0 8px 20px rgba(0,0,0,0.5);
+           border: 1px solid rgba(255,255,255,0.1);
+       }
+       
+       .favorite-thumb img {
+           width: 100%;
+           height: 100%;
+           object-fit: cover;
+       }
+       
+       .favorite-thumb .play-icon {
+           position: absolute;
+           inset: 0;
+           background: rgba(0,0,0,0.6);
+           display: flex;
+           align-items: center;
+           justify-content: center;
+           font-size: 1.6rem;
+           opacity: 0;
+           transition: opacity 0.3s;
+           backdrop-filter: blur(2px);
+           color: white;
+           text-shadow: 0 2px 10px rgba(255,255,255,0.5);
+       }
+       
+       .favorite-item:hover .play-icon {
+           opacity: 1;
+       }
+       
+       .favorite-info {
+           flex: 1;
+           min-width: 0;
+       }
+       
+       .favorite-name {
+           font-weight: 500;
+           margin-bottom: 6px;
+           font-size: 1rem;
+           color: var(--text-light);
+           display: flex;
+           align-items: center;
+           gap: 6px;
+           text-shadow: 0 2px 8px rgba(0,0,0,0.8);
+       }
+       
+       .favorite-name i {
+           font-size: 0.85rem;
+           color: var(--text-gray);
+           filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+       }
+       
+       .favorite-meta {
+           font-size: 0.8rem;
+           color: var(--text-gray);
+           display: flex;
+           align-items: center;
+           gap: 10px;
+           text-shadow: 0 1px 4px rgba(0,0,0,0.6);
+       }
+       
+       .playing-badge {
+           display: inline-flex;
+           align-items: center;
+           gap: 5px;
+           background: var(--primary);
+           color: white;
+           padding: 3px 10px;
+           border-radius: 30px;
+           font-size: 0.75rem;
+           font-weight: 500;
+           box-shadow: 0 4px 12px rgba(254,44,85,0.4);
+           border: 1px solid rgba(255,255,255,0.2);
+       }
+       
+       .playing-badge i {
+           font-size: 0.8rem;
+           filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+       }
+       
+       .playing-badge::before {
+           content: '';
+           width: 5px;
+           height: 5px;
+           background: white;
+           border-radius: 50%;
+           animation: pulse 1s infinite;
+           margin-right: 3px;
+           box-shadow: 0 0 8px white;
+       }
+       
+       @keyframes pulse {
+           0%, 100% { opacity: 1; transform: scale(1); }
+           50% { opacity: 0.7; transform: scale(1.2); }
+       }
+       
+       .favorite-remove {
+           width: 36px;
+           height: 36px;
+           border-radius: 50%;
+           background: rgba(255,255,255,0.08);
+           border: 1px solid rgba(255,255,255,0.15);
+           color: var(--text-gray);
+           display: flex;
+           align-items: center;
+           justify-content: center;
+           cursor: pointer;
+           flex-shrink: 0;
+           transition: all 0.3s;
+           font-size: 1.1rem;
+           box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+       }
+       
+       .favorite-remove:hover {
+           background: var(--primary);
+           color: white;
+           transform: scale(1.1);
+           border-color: var(--primary);
+           box-shadow: 0 6px 15px rgba(254,44,85,0.6);
+       }
+       
+       .empty-favorites {
+           text-align: center;
+           padding: 60px 20px;
+           color: var(--text-gray);
+           text-shadow: 0 2px 10px rgba(0,0,0,0.8);
+       }
+       
+       .empty-favorites .empty-icon {
+           font-size: 5rem;
+           margin-bottom: 20px;
+           opacity: 0.7;
+           color: var(--primary);
+           animation: heartBeat 1.5s infinite;
+           filter: drop-shadow(0 10px 25px rgba(254,44,85,0.4));
+       }
+       
+       @keyframes heartBeat {
+           0%, 100% { transform: scale(1); }
+           50% { transform: scale(1.1); filter: drop-shadow(0 15px 35px rgba(254,44,85,0.6)); }
+       }
+       
+       /* 遮罩层 */
+       .overlay {
+           position: fixed;
+           top: 0;
+           left: 0;
+           right: 0;
+           bottom: 0;
+           width: 100vw;
+           height: 100vh;
+           background: rgba(0,0,0,0.7);
+           opacity: 0;
+           pointer-events: none;
+           transition: opacity 0.3s;
+           z-index: 90;
+           backdrop-filter: blur(5px);
+       }
+       
+       .overlay.active {
+           opacity: 1;
+           pointer-events: all;
+       }
+       
+       /* 播放/暂停按钮（中央） */
+       .center-play {
+           position: absolute;
+           top: 50%;
+           left: 50%;
+           transform: translate(-50%, -50%) scale(0);
+           width: 80px;
+           height: 80px;
+           border-radius: 50%;
+           background: rgba(0,0,0,0.7);
+           backdrop-filter: blur(12px);
+           display: flex;
+           align-items: center;
+           justify-content: center;
+           font-size: 2.2rem;
+           color: white;
+           z-index: 25;
+           transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+           pointer-events: none;
+           border: 2px solid rgba(255,255,255,0.25);
+           box-shadow: 0 15px 40px rgba(0,0,0,0.8), 0 0 40px rgba(254,44,85,0.3);
+       }
+       
+       .center-play i {
+           font-size: 2.8rem;
+           filter: drop-shadow(0 5px 15px rgba(255,255,255,0.3));
+       }
+       
+       .center-play.show {
+           transform: translate(-50%, -50%) scale(1);
+       }
+       
+       /* 自动播放提示 */
+       .autoplay-hint {
+           position: absolute;
+           top: 50%;
+           right: 20px;
+           transform: translateY(-50%);
+           background: rgba(0,0,0,0.85);
+           padding: 14px 22px;
+           border-radius: 50px;
+           display: flex;
+           align-items: center;
+           gap: 14px;
+           opacity: 0;
+           transition: opacity 0.3s;
+           z-index: 30;
+           pointer-events: none;
+           backdrop-filter: blur(12px);
+           border: 1px solid rgba(255,255,255,0.15);
+           box-shadow: 0 12px 30px rgba(0,0,0,0.7), 0 0 25px rgba(254,44,85,0.2);
+       }
+       
+       .autoplay-hint.show {
+           opacity: 1;
+       }
+       
+       .autoplay-hint i {
+           font-size: 1.5rem;
+           color: var(--primary);
+           filter: drop-shadow(0 2px 10px rgba(254,44,85,0.6));
+       }
+       
+       .autoplay-hint span {
+           color: var(--text-light);
+           font-size: 0.9rem;
+           font-weight: 500;
+           text-shadow: 0 2px 8px rgba(0,0,0,0.8);
+       }
+       
+       .countdown {
+           width: 34px;
+           height: 34px;
+           border-radius: 50%;
+           border: 2px solid var(--primary);
+           display: flex;
+           align-items: center;
+           justify-content: center;
+           font-size: 1rem;
+           font-weight: bold;
+           color: var(--primary);
+           background: rgba(0,0,0,0.4);
+           box-shadow: 0 0 15px rgba(254,44,85,0.4);
+       }
+       
+       /* 提示消息 */
+       .toast {
+           position: fixed;
+           top: 70px;
+           left: 50%;
+           transform: translateX(-50%) translateY(-20px);
+           background: rgba(0,0,0,0.9);
+           color: white;
+           padding: 12px 24px;
+           border-radius: 40px;
+           font-size: 0.9rem;
+           opacity: 0;
+           transition: all 0.3s;
+           z-index: 200;
+           backdrop-filter: blur(12px);
+           border: 1px solid rgba(255,255,255,0.2);
+           display: flex;
+           align-items: center;
+           gap: 10px;
+           box-shadow: 0 12px 30px rgba(0,0,0,0.7), 0 0 25px rgba(254,44,85,0.2);
+       }
+       
+       .toast i {
+           color: var(--primary);
+           font-size: 1.1rem;
+           filter: drop-shadow(0 2px 8px rgba(254,44,85,0.6));
+       }
+       
+       .toast.show {
+           opacity: 1;
+           transform: translateX(-50%) translateY(0);
+       }
+       
+       /* 获取链接提示 */
+       .fetching-tip {
+           position: absolute;
+           top: 50%;
+           left: 50%;
+           transform: translate(-50%, -50%);
+           background: rgba(0,0,0,0.92);
+           padding: 25px 35px;
+           border-radius: 30px;
+           text-align: center;
+           z-index: 50;
+           display: none;
+           backdrop-filter: blur(15px);
+           border: 1px solid rgba(255,255,255,0.15);
+           box-shadow: 0 20px 40px rgba(0,0,0,0.8), 0 0 30px rgba(254,44,85,0.3);
+       }
+       
+       .fetching-tip.show {
+           display: block;
+       }
+       
+       .fetching-tip .spinner {
+           width: 50px;
+           height: 50px;
+           border: 4px solid rgba(255,255,255,0.1);
+           border-top-color: var(--primary);
+           border-right-color: var(--primary-light);
+           border-radius: 50%;
+           animation: spin 1s linear infinite;
+           margin: 0 auto 15px;
+           box-shadow: 0 0 25px rgba(254,44,85,0.3);
+       }
+       
+       .fetching-tip p {
+           color: var(--text-gray);
+           font-size: 1rem;
+           display: flex;
+           align-items: center;
+           gap: 8px;
+           text-shadow: 0 2px 8px rgba(0,0,0,0.8);
+       }
+       
+       .fetching-tip p i {
+           color: var(--primary);
+           font-size: 1.1rem;
+           filter: drop-shadow(0 2px 10px rgba(254,44,85,0.6));
+       }
+       
+       @keyframes spin {
+           to { transform: translate(-50%, -50%) rotate(360deg); }
+       }
+       
+       /* 桌面端适配 */
+       @media (min-width: 768px) {
+           .app-container {
+               max-width: 480px;
+               margin: 0 auto;
+               border-left: 1px solid rgba(255,255,255,0.1);
+               border-right: 1px solid rgba(255,255,255,0.1);
+               box-shadow: 0 0 50px rgba(0,0,0,0.8);
+           }
+           
+           .action-sidebar {
+               right: calc(50% - 220px);
+           }
+           
+           .top-nav {
+               max-width: 480px;
+               left: 50%;
+               transform: translateX(-50%);
+           }
+           
+           .favorites-drawer, .failed-drawer {
+               max-width: 420px;
+           }
+           
+           .favorites-drawer {
+               left: auto;
+               right: -100%;
+               transition: right 0.3s ease;
+           }
+           
+           .favorites-drawer.open {
+               left: auto;
+               right: 0;
+           }
+       }
+   </style>
+</head>
+<body>
+   <div class="app-container">
+       <!-- 顶部导航 -->
+       <div class="top-nav" id="topNav">
+           <div class="nav-left">
+               <button class="nav-btn" onclick="toggleFavorites()" id="favBtn" title="喜欢列表">
+                   <i class="fas fa-heart"></i>
+                   <span class="badge" id="favBadge" style="display: none;">0</span>
+               </button>
+           </div>
+           <div class="nav-right">
+               <button class="nav-btn" onclick="toggleFailedDrawer()" id="failedBtn" title="失败记录">
+                   <i class="fas fa-exclamation-triangle"></i>
+                   <span class="badge" id="failedBadge" style="display: none;">0</span>
+               </button>
+           </div>
+       </div>
+       
+       <!-- 模式指示器 -->
+       <div class="mode-indicator" id="modeIndicator">
+           <i class="fas fa-sync-alt"></i>
+           <span id="modeText">切换到普通模式</span>
+       </div>
+       
+       <!-- 视频滑动容器 -->
+       <div class="video-slider" id="videoSlider"></div>
+       
+       <!-- 中央播放按钮 -->
+       <div class="center-play" id="centerPlay">
+           <i class="fas fa-play"></i>
+       </div>
+       
+       <!-- 自动播放提示 -->
+       <div class="autoplay-hint" id="autoplayHint">
+           <i class="fas fa-forward"></i>
+           <div class="countdown" id="countdown">3</div>
+           <span>秒后播放下一个</span>
+       </div>
+       
+       <!-- 获取链接提示 -->
+       <div class="fetching-tip" id="fetchingTip">
+           <div class="spinner"></div>
+           <p><i class="fas fa-link"></i> 正在获取播放链接...</p>
+       </div>
+   </div>
+   
+   <!-- 遮罩层 -->
+   <div class="overlay" id="overlay" onclick="closeAllDrawers()"></div>
+   
+   <!-- 喜欢列表侧边栏 -->
+   <div class="favorites-drawer" id="favoritesDrawer">
+       <div class="drawer-header">
+           <div class="title-row">
+               <div class="title-section">
+                   <span class="heart-icon"><i class="fas fa-heart"></i></span>
+                   <span class="main-title">我的喜欢</span>
+               </div>
+               <button class="close-btn" onclick="toggleFavorites()">
+                   <i class="fas fa-times"></i>
+               </button>
+           </div>
+           
+           <div class="buttons-row">
+               <div class="like-count-btn" onclick="toggleFavorites()">
+                   <i class="fas fa-heart"></i>
+                   <span>喜欢 <span class="count" id="favCount">0</span></span>
+               </div>
+               <button class="play-all-btn" onclick="playFavoritesMode()" id="playFavBtn">
+                   <i class="fas fa-play"></i>
+                   <span>全部播放</span>
+               </button>
+           </div>
+       </div>
+       
+       <div class="favorites-list" id="favoritesList">
+           <div class="empty-favorites">
+               <div class="empty-icon"><i class="fas fa-heart-crack"></i></div>
+               <div>还没有喜欢的视频</div>
+               <div style="font-size: 1rem; margin-top: 15px; opacity: 0.6;">
+                   点击 <i class="fas fa-heart" style="color: var(--primary);"></i> 收藏喜欢的内容
+               </div>
+           </div>
+       </div>
+   </div>
+   
+   <!-- 失败记录侧边栏 - 优化点击和滑动 -->
+   <div class="failed-drawer" id="failedDrawer">
+       <div class="drawer-header">
+           <div class="drawer-title">
+               <i class="fas fa-shield-halved title-icon"></i>
+               <span>失败记录</span>
+               <span style="font-size: 0.9rem; color: var(--text-gray);" id="failedCount"></span>
+           </div>
+           <div class="drawer-actions">
+               <button class="drawer-close" onclick="toggleFailedDrawer()">
+                   <i class="fas fa-times"></i>
+               </button>
+           </div>
+       </div>
+       
+       <!-- 分类标签 - 优化点击区域 -->
+       <div class="failed-tabs">
+           <div class="failed-tab error-tab active" onclick="switchFailedTab('error')" id="errorTab">
+               <i class="fas fa-circle-exclamation"></i>
+               <span>错误</span>
+               <span class="count" id="errorCount">0</span>
+           </div>
+           <div class="failed-tab timeout-tab" onclick="switchFailedTab('timeout')" id="timeoutTab">
+               <i class="fas fa-hourglass-end"></i>
+               <span>超时</span>
+               <span class="count" id="timeoutCount">0</span>
+           </div>
+       </div>
+       
+       <!-- 可滑动的列表容器 -->
+       <div class="failed-list-wrapper" id="failedListWrapper">
+           <!-- 错误列表容器 -->
+           <div class="failed-list-container" id="errorListContainer" style="transform: translateX(0);">
+               <div class="failed-list-header">
+                   <span class="title"><i class="fas fa-circle-exclamation" style="color: #f44336;"></i> 错误列表</span>
+                   <button class="action-btn clear-all" onclick="clearAllErrors()" id="clearAllErrorsBtn">
+                       <i class="fas fa-trash-can"></i>
+                       <span>全部清除</span>
+                   </button>
+               </div>
+               <div class="failed-list" id="errorList"></div>
+           </div>
+           
+           <!-- 超时列表容器 -->
+           <div class="failed-list-container" id="timeoutListContainer" style="transform: translateX(100%);">
+               <div class="failed-list-header">
+                   <span class="title"><i class="fas fa-hourglass-end" style="color: #ff9800;"></i> 超时列表</span>
+                   <button class="action-btn retry-all" onclick="retryAllTimeouts()" id="retryAllTimeoutsBtn">
+                       <i class="fas fa-rotate-right"></i>
+                       <span>全部重试</span>
+                   </button>
+               </div>
+               <div class="failed-list" id="timeoutList"></div>
+           </div>
+       </div>
+   </div>
+   
+   <!-- Toast提示 -->
+   <div class="toast" id="toast">
+       <i class="fas fa-info-circle"></i>
+       <span></span>
+   </div>
+
+   <script>
+       const API_BASE = 'https://api.yuafeng.cn/API/spxl/api.php';
+       
+       // 状态管理
+       let allSeries = [];
+       let currentIndex = 0;
+       let favorites = JSON.parse(localStorage.getItem('videoFavorites') || '[]');
+       let favoriteUrls = JSON.parse(localStorage.getItem('favoriteUrls') || '{}');
+       let isPlaying = true;
+       let autoplayTimer = null;
+       let countdownTimer = null;
+       let videoCache = new Map();
+       let videoBlobCache = new Map();
+       let isFavoritesMode = false;
+       let favCurrentIndex = 0;
+       let isLoopMode = false;
+       let loadTimeout = null;
+       
+       // UI隐藏状态
+       let uiHidden = false;
+       let touchStartX = 0;
+       let touchStartY = 0;
+       
+       // 双击检测
+       let lastTapTime = 0;
+       
+       // 失败记录滑动相关
+       let failedTouchStartX = 0;
+       let failedTouchStartY = 0;
+       let isFailedDragging = false;
+       let currentFailedTab = 'error';
+       let failedListWrapper = null;
+       let errorContainer = null;
+       let timeoutContainer = null;
+       
+       // 失败记录
+       let failedSeries = new Set(JSON.parse(localStorage.getItem('failedSeries') || '[]'));
+       let failedDetails = JSON.parse(localStorage.getItem('failedDetails') || '{}');
+       let failCount = JSON.parse(localStorage.getItem('failCount') || '{}');
+       
+       // 初始化
+       async function init() {
+           await loadAllSeries();
+           renderVideos();
+           setupGestures();
+           setupSwipeToHide();
+           setupDoubleTap();
+           setupFailedSwipe();
+           updateFavoritesUI();
+           updateFavBadge();
+           updateFailedUI();
+           updateFailedBadge();
+       }
+       
+       // 设置失败记录滑动切换
+       function setupFailedSwipe() {
+           failedListWrapper = document.getElementById('failedListWrapper');
+           errorContainer = document.getElementById('errorListContainer');
+           timeoutContainer = document.getElementById('timeoutListContainer');
+           
+           if (!failedListWrapper) return;
+           
+           failedListWrapper.addEventListener('touchstart', handleFailedTouchStart, { passive: true });
+           failedListWrapper.addEventListener('touchmove', handleFailedTouchMove, { passive: false });
+           failedListWrapper.addEventListener('touchend', handleFailedTouchEnd, { passive: true });
+           failedListWrapper.addEventListener('touchcancel', handleFailedTouchEnd, { passive: true });
+       }
+       
+       function handleFailedTouchStart(e) {
+           failedTouchStartX = e.touches[0].clientX;
+           failedTouchStartY = e.touches[0].clientY;
+           isFailedDragging = false;
+       }
+       
+       function handleFailedTouchMove(e) {
+           if (!failedTouchStartX) return;
+           
+           const touchEndX = e.touches[0].clientX;
+           const touchEndY = e.touches[0].clientY;
+           const diffX = touchEndX - failedTouchStartX;
+           const diffY = Math.abs(touchEndY - failedTouchStartY);
+           
+           // 确保是水平滑动
+           if (Math.abs(diffX) > 20 && diffY < 30) {
+               e.preventDefault();
+               isFailedDragging = true;
+               
+               // 实时移动效果
+               if (errorContainer && timeoutContainer) {
+                   const wrapperWidth = failedListWrapper.offsetWidth;
+                   const movePercent = diffX / wrapperWidth;
+                   
+                   if (currentFailedTab === 'error') {
+                       // 向右滑动时，错误列表向左移动，超时列表从右边进入
+                       const errorMove = Math.min(0, Math.max(-100, movePercent * 100));
+                       const timeoutMove = 100 + errorMove;
+                       errorContainer.style.transform = `translateX(${errorMove}%)`;
+                       timeoutContainer.style.transform = `translateX(${timeoutMove}%)`;
+                   } else {
+                       // 向左滑动时，错误列表从左边进入，超时列表向右移动
+                       const timeoutMove = Math.min(0, Math.max(-100, -movePercent * 100));
+                       const errorMove = -100 + timeoutMove;
+                       errorContainer.style.transform = `translateX(${errorMove}%)`;
+                       timeoutContainer.style.transform = `translateX(${timeoutMove}%)`;
+                   }
+               }
+           }
+       }
+       
+       function handleFailedTouchEnd(e) {
+           if (!failedTouchStartX || !isFailedDragging) {
+               failedTouchStartX = 0;
+               return;
+           }
+           
+           const touchEndX = e.changedTouches[0].clientX;
+           const diffX = touchEndX - failedTouchStartX;
+           const wrapperWidth = failedListWrapper.offsetWidth;
+           const swipeThreshold = wrapperWidth * 0.2; // 滑动超过20%才切换
+           
+           if (Math.abs(diffX) > swipeThreshold) {
+               if (diffX > 0 && currentFailedTab === 'timeout') {
+                   // 向右滑动，从超时切换到错误
+                   switchFailedTab('error', true);
+               } else if (diffX < 0 && currentFailedTab === 'error') {
+                   // 向左滑动，从错误切换到超时
+                   switchFailedTab('timeout', true);
+               } else {
+                   // 滑动距离不够，复位
+                   resetFailedPosition();
+               }
+           } else {
+               // 滑动距离不够，复位
+               resetFailedPosition();
+           }
+           
+           failedTouchStartX = 0;
+           isFailedDragging = false;
+       }
+       
+       function resetFailedPosition() {
+           if (errorContainer && timeoutContainer) {
+               if (currentFailedTab === 'error') {
+                   errorContainer.style.transform = 'translateX(0)';
+                   timeoutContainer.style.transform = 'translateX(100%)';
+               } else {
+                   errorContainer.style.transform = 'translateX(-100%)';
+                   timeoutContainer.style.transform = 'translateX(0)';
+               }
+           }
+       }
+       
+       // 切换失败标签 - 优化点击响应
+       function switchFailedTab(tab, fromSwipe = false) {
+           if (currentFailedTab === tab && !fromSwipe) return;
+           
+           currentFailedTab = tab;
+           
+           const errorTab = document.getElementById('errorTab');
+           const timeoutTab = document.getElementById('timeoutTab');
+           const errorContainer = document.getElementById('errorListContainer');
+           const timeoutContainer = document.getElementById('timeoutListContainer');
+           
+           // 更新标签样式
+           if (tab === 'error') {
+               errorTab.classList.add('active');
+               timeoutTab.classList.remove('active');
+               if (errorContainer && timeoutContainer) {
+                   errorContainer.style.transform = 'translateX(0)';
+                   timeoutContainer.style.transform = 'translateX(100%)';
+               }
+               updateErrorList();
+           } else {
+               timeoutTab.classList.add('active');
+               errorTab.classList.remove('active');
+               if (errorContainer && timeoutContainer) {
+                   errorContainer.style.transform = 'translateX(-100%)';
+                   timeoutContainer.style.transform = 'translateX(0)';
+               }
+               updateTimeoutList();
+           }
+       }
+       
+       // 设置双击切换模式
+       function setupDoubleTap() {
+           const slider = document.getElementById('videoSlider');
+           
+           slider.addEventListener('touchstart', (e) => {
+               const currentTime = new Date().getTime();
+               const tapLength = currentTime - lastTapTime;
+               
+               if (tapLength < 300 && tapLength > 0) {
+                   e.preventDefault();
+                   togglePlayMode();
+               }
+               
+               lastTapTime = currentTime;
+           });
+           
+           slider.addEventListener('dblclick', (e) => {
+               e.preventDefault();
+               togglePlayMode();
+           });
+       }
+       
+       function togglePlayMode() {
+           if (isFavoritesMode) {
+               isFavoritesMode = false;
+               showModeIndicator('普通模式', 'fa-list');
+               if (currentIndex >= allSeries.length) {
+                   currentIndex = 0;
+               }
+           } else {
+               if (favorites.length === 0) {
+                   showToast('喜欢列表为空', 'error');
+                   return;
+               }
+               isFavoritesMode = true;
+               favCurrentIndex = 0;
+               showModeIndicator('喜欢模式', 'fa-heart');
+           }
+           
+           renderVideos();
+           updateFavoritesUI();
+       }
+       
+       function showModeIndicator(text, icon) {
+           const indicator = document.getElementById('modeIndicator');
+           const modeText = document.getElementById('modeText');
+           const iconElement = indicator.querySelector('i');
+           
+           modeText.textContent = `切换到${text}`;
+           iconElement.className = `fas ${icon}`;
+           
+           indicator.classList.add('show');
+           
+           setTimeout(() => {
+               indicator.classList.remove('show');
+           }, 2000);
+       }
+       
+       function setupSwipeToHide() {
+           const slider = document.getElementById('videoSlider');
+           
+           slider.addEventListener('touchstart', (e) => {
+               touchStartX = e.touches[0].clientX;
+               touchStartY = e.touches[0].clientY;
+           }, { passive: true });
+           
+           slider.addEventListener('touchmove', (e) => {
+               if (!touchStartX) return;
+               
+               const touchEndX = e.touches[0].clientX;
+               const touchEndY = e.touches[0].clientY;
+               const diffX = touchEndX - touchStartX;
+               const diffY = Math.abs(touchEndY - touchStartY);
+               
+               if (Math.abs(diffX) > 30 && diffY < 20) {
+                   if (diffX > 0) {
+                       if (!uiHidden) {
+                           uiHidden = true;
+                           updateUIHiddenState();
+                       }
+                   } else {
+                       if (uiHidden) {
+                           uiHidden = false;
+                           updateUIHiddenState();
+                       }
+                   }
+               }
+           }, { passive: true });
+           
+           slider.addEventListener('touchend', () => {
+               touchStartX = 0;
+               touchStartY = 0;
+           }, { passive: true });
+       }
+       
+       function updateUIHiddenState() {
+           const topNav = document.getElementById('topNav');
+           const actionSidebar = document.querySelectorAll('.action-sidebar');
+           const videoOverlay = document.querySelectorAll('.video-overlay');
+           
+           if (uiHidden) {
+               topNav.classList.add('hidden');
+               actionSidebar.forEach(el => el.classList.add('hidden'));
+               videoOverlay.forEach(el => el.classList.add('hidden'));
+           } else {
+               topNav.classList.remove('hidden');
+               actionSidebar.forEach(el => el.classList.remove('hidden'));
+               videoOverlay.forEach(el => el.classList.remove('hidden'));
+           }
+       }
+       
+       function saveFailedRecords() {
+           localStorage.setItem('failedSeries', JSON.stringify([...failedSeries]));
+           localStorage.setItem('failedDetails', JSON.stringify(failedDetails));
+           localStorage.setItem('failCount', JSON.stringify(failCount));
+           updateFailedBadge();
+           updateFailedUI();
+       }
+       
+       function handleFail(series, reason = '加载失败') {
+           const isTimeout = reason.includes('超时') || reason.includes('timeout');
+           
+           if (!failCount[series]) {
+               failCount[series] = 1;
+           } else {
+               failCount[series]++;
+           }
+           
+           if (failCount[series] < 2) {
+               showToast(`"${series}" 加载失败，正在重试...`, 'info');
+               
+               videoCache.delete(series);
+               videoBlobCache.delete(series);
+               if (favoriteUrls[series]) {
+                   delete favoriteUrls[series];
+                   localStorage.setItem('favoriteUrls', JSON.stringify(favoriteUrls));
+               }
+               
+               const activeItem = document.querySelector('.video-item.active');
+               if (activeItem && activeItem.dataset.series === series) {
+                   setTimeout(() => {
+                       loadVideoSource(activeItem, series, currentIndex);
+                   }, 1000);
+               }
+               return false;
+           }
+           
+           if (!failedSeries.has(series)) {
+               failedSeries.add(series);
+               failedDetails[series] = {
+                   reason: reason,
+                   time: new Date().toLocaleString(),
+                   retryCount: failCount[series],
+                   type: isTimeout ? 'timeout' : 'error'
+               };
+               
+               delete failCount[series];
+               
+               saveFailedRecords();
+               updateFailedUI();
+               showToast(`"${series}" 连续失败2次，已加入失败记录`, isTimeout ? 'timeout' : 'error');
+               
+               setTimeout(() => {
+                   if (isFavoritesMode) {
+                       playNextFav();
+                   } else {
+                       playNext();
+                   }
+               }, 1000);
+               
+               return true;
+           }
+           
+           return false;
+       }
+       
+       function resetFailCount(series) {
+           if (failCount[series]) {
+               delete failCount[series];
+               localStorage.setItem('failCount', JSON.stringify(failCount));
+           }
+       }
+       
+       function removeFailedRecord(series) {
+           failedSeries.delete(series);
+           delete failedDetails[series];
+           delete failCount[series];
+           saveFailedRecords();
+           
+           if (!isFavoritesMode) {
+               renderVideos();
+           }
+       }
+       
+       function clearAllErrors() {
+           const errors = getErrorsList();
+           errors.forEach(series => {
+               failedSeries.delete(series);
+               delete failedDetails[series];
+               delete failCount[series];
+           });
+           saveFailedRecords();
+           
+           if (!isFavoritesMode) {
+               renderVideos();
+           }
+           showToast(`已清除 ${errors.length} 个错误记录`, 'success');
+       }
+       
+       function retryAllTimeouts() {
+           const timeouts = getTimeoutsList();
+           timeouts.forEach(series => {
+               failedSeries.delete(series);
+               delete failedDetails[series];
+               delete failCount[series];
+           });
+           saveFailedRecords();
+           
+           if (!isFavoritesMode) {
+               renderVideos();
+           }
+           showToast(`已重试 ${timeouts.length} 个超时记录`, 'success');
+       }
+       
+       function getErrorsList() {
+           return [...failedSeries].filter(series => 
+               failedDetails[series]?.type === 'error' || 
+               (failedDetails[series]?.reason && !failedDetails[series]?.reason.includes('超时') && !failedDetails[series]?.reason.includes('timeout'))
+           );
+       }
+       
+       function getTimeoutsList() {
+           return [...failedSeries].filter(series => 
+               failedDetails[series]?.type === 'timeout' || 
+               (failedDetails[series]?.reason && (failedDetails[series]?.reason.includes('超时') || failedDetails[series]?.reason.includes('timeout')))
+           );
+       }
+       
+       function updateErrorList() {
+           const list = document.getElementById('errorList');
+           const countSpan = document.getElementById('errorCount');
+           const errors = getErrorsList();
+           
+           countSpan.textContent = errors.length;
+           
+           if (errors.length === 0) {
+               list.innerHTML = `
+                   <div class="empty-failed">
+                       <div class="icon"><i class="fas fa-circle-check"></i></div>
+                       <div>暂无错误记录</div>
+                   </div>
+               `;
+               return;
+           }
+           
+           list.innerHTML = errors.map(series => {
+               const details = failedDetails[series] || { reason: '未知错误', time: '未知时间', retryCount: 2 };
+               
+               return `
+                   <div class="failed-item error-item">
+                       <div class="failed-info">
+                           <div class="failed-name">
+                               <i class="fas fa-circle-exclamation"></i>
+                               ${series}
+                           </div>
+                           <div class="failed-meta">
+                               <span class="failed-reason"><i class="fas fa-circle-info"></i> ${details.reason}</span>
+                               <span><i class="far fa-clock"></i> ${details.time}</span>
+                               <span><i class="fas fa-rotate-right"></i> 失败 ${details.retryCount} 次</span>
+                           </div>
+                       </div>
+                       <button class="failed-remove" onclick="event.stopPropagation(); removeFailedRecord('${series}')" title="移除">
+                           <i class="fas fa-times"></i>
+                       </button>
+                   </div>
+               `;
+           }).join('');
+       }
+       
+       function updateTimeoutList() {
+           const list = document.getElementById('timeoutList');
+           const countSpan = document.getElementById('timeoutCount');
+           const timeouts = getTimeoutsList();
+           
+           countSpan.textContent = timeouts.length;
+           
+           if (timeouts.length === 0) {
+               list.innerHTML = `
+                   <div class="empty-failed">
+                       <div class="icon"><i class="fas fa-circle-check"></i></div>
+                       <div>暂无超时记录</div>
+                   </div>
+               `;
+               return;
+           }
+           
+           list.innerHTML = timeouts.map(series => {
+               const details = failedDetails[series] || { reason: '加载超时', time: '未知时间', retryCount: 2 };
+               
+               return `
+                   <div class="failed-item timeout-item">
+                       <div class="failed-info">
+                           <div class="failed-name">
+                               <i class="fas fa-hourglass-end"></i>
+                               ${series}
+                           </div>
+                           <div class="failed-meta">
+                               <span class="failed-reason"><i class="fas fa-circle-info"></i> ${details.reason}</span>
+                               <span><i class="far fa-clock"></i> ${details.time}</span>
+                               <span><i class="fas fa-rotate-right"></i> 失败 ${details.retryCount} 次</span>
+                           </div>
+                       </div>
+                       <button class="failed-retry" onclick="event.stopPropagation(); retryTimeout('${series}')" title="重试">
+                           <i class="fas fa-rotate-right"></i>
+                       </button>
+                       <button class="failed-remove" onclick="event.stopPropagation(); removeFailedRecord('${series}')" title="移除">
+                           <i class="fas fa-times"></i>
+                       </button>
+                   </div>
+               `;
+           }).join('');
+       }
+       
+       function retryTimeout(series) {
+           removeFailedRecord(series);
+           
+           if (!isFavoritesMode) {
+               const activeItem = document.querySelector('.video-item.active');
+               if (activeItem && activeItem.dataset.series === series) {
+                   loadVideoSource(activeItem, series, currentIndex);
+               }
+           }
+           
+           showToast(`正在重试 "${series}"`, 'info');
+       }
+       
+       async function loadAllSeries() {
+           try {
+               const response = await fetch(`${API_BASE}?type=json&page=1`);
+               const data = await response.json();
+               
+               if (data.code === 0) {
+                   const totalPages = data.data.total_pages;
+                   let tempSeries = [...data.data.series_list];
+                   
+                   const promises = [];
+                   for (let i = 2; i <= Math.min(totalPages, 5); i++) {
+                       promises.push(
+                           fetch(`${API_BASE}?type=json&page=${i}`)
+                               .then(r => r.json())
+                               .then(d => d.code === 0 ? d.data.series_list : [])
+                               .catch(() => [])
+                       );
+                   }
+                   
+                   const results = await Promise.all(promises);
+                   results.forEach(list => tempSeries = tempSeries.concat(list));
+                   
+                   allSeries = [...new Set(tempSeries)];
+                   allSeries = allSeries.sort(() => Math.random() - 0.5);
+               }
+           } catch (error) {
+               showToast('加载失败，请刷新重试', 'error');
+           }
+       }
+       
+       async function fetchVideoUrl(series) {
+           if (failedSeries.has(series)) {
+               return null;
+           }
+           
+           if (favoriteUrls[series]) {
+               return favoriteUrls[series];
+           }
+           
+           if (videoCache.has(series)) return videoCache.get(series);
+           
+           try {
+               const response = await fetch(`${API_BASE}?series=${encodeURIComponent(series)}&urltype=text`);
+               
+               if (!response.ok) {
+                   throw new Error(`HTTP ${response.status}`);
+               }
+               
+               const videoUrl = await response.text();
+               
+               if (!videoUrl || videoUrl.trim() === '' || videoUrl.includes('error') || videoUrl.includes('404')) {
+                   throw new Error('无效的视频URL');
+               }
+               
+               videoCache.set(series, videoUrl);
+               return videoUrl;
+           } catch (error) {
+               console.error('获取链接失败:', error);
+               return null;
+           }
+       }
+       
+       async function preloadVideoBlob(series) {
+           if (failedSeries.has(series)) {
+               return null;
+           }
+           
+           if (videoBlobCache.has(series)) return videoBlobCache.get(series);
+           
+           const videoUrl = await fetchVideoUrl(series);
+           if (!videoUrl) return null;
+           
+           try {
+               const response = await fetch(videoUrl);
+               if (!response.ok) {
+                   throw new Error(`网络错误 ${response.status}`);
+               }
+               const blob = await response.blob();
+               const blobUrl = URL.createObjectURL(blob);
+               videoBlobCache.set(series, blobUrl);
+               return blobUrl;
+           } catch (error) {
+               console.error('预加载视频失败:', error);
+               return videoUrl;
+           }
+       }
+       
+       function formatTime(seconds) {
+           if (isNaN(seconds) || !isFinite(seconds)) return '00:00';
+           const mins = Math.floor(seconds / 60);
+           const secs = Math.floor(seconds % 60);
+           return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+       }
+       
+       async function generateThumbnail(series) {
+           if (failedSeries.has(series)) return null;
+           
+           return new Promise(async (resolve) => {
+               const videoUrl = await fetchVideoUrl(series);
+               if (!videoUrl) {
+                   resolve(null);
+                   return;
+               }
+               
+               const video = document.createElement('video');
+               video.crossOrigin = 'anonymous';
+               video.src = videoUrl;
+               video.muted = true;
+               video.preload = 'auto';
+               
+               const timeout = setTimeout(() => resolve(null), 8000);
+               
+               video.addEventListener('loadeddata', () => {
+                   video.currentTime = 0.1;
+               });
+               
+               video.addEventListener('seeked', () => {
+                   clearTimeout(timeout);
+                   try {
+                       const canvas = document.createElement('canvas');
+                       canvas.width = 160;
+                       canvas.height = 160;
+                       const ctx = canvas.getContext('2d');
+                       ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                       const thumbnail = canvas.toDataURL('image/jpeg', 0.8);
+                       
+                       localStorage.setItem(`thumb_${series}`, thumbnail);
+                       updateThumbnailInUI(series, thumbnail);
+                       resolve(thumbnail);
+                   } catch (e) {
+                       resolve(null);
+                   }
+               });
+               
+               video.addEventListener('error', () => {
+                   clearTimeout(timeout);
+                   resolve(null);
+               });
+               
+               video.load();
+           });
+       }
+       
+       function updateThumbnailInUI(series, thumbnail) {
+           const favoriteItems = document.querySelectorAll('.favorite-item');
+           favoriteItems.forEach(item => {
+               const nameElement = item.querySelector('.favorite-name');
+               if (nameElement && nameElement.textContent.trim() === series) {
+                   const thumbDiv = item.querySelector('.favorite-thumb');
+                   if (thumbDiv) {
+                       let img = thumbDiv.querySelector('img');
+                       if (img) {
+                           img.src = thumbnail;
+                       } else {
+                           const playIcon = thumbDiv.querySelector('.play-icon');
+                           thumbDiv.innerHTML = '';
+                           img = document.createElement('img');
+                           img.src = thumbnail;
+                           img.alt = '';
+                           thumbDiv.appendChild(img);
+                           if (playIcon) {
+                               thumbDiv.appendChild(playIcon);
+                           } else {
+                               const newPlayIcon = document.createElement('div');
+                               newPlayIcon.className = 'play-icon';
+                               newPlayIcon.innerHTML = '<i class="fas fa-play"></i>';
+                               thumbDiv.appendChild(newPlayIcon);
+                           }
+                       }
+                   }
+               }
+           });
+       }
+       
+       async function preloadThumbnails() {
+           for (let series of favorites) {
+               if (!localStorage.getItem(`thumb_${series}`) && !failedSeries.has(series)) {
+                   await generateThumbnail(series);
+               }
+           }
+       }
+       
+       function renderVideos() {
+           const slider = document.getElementById('videoSlider');
+           slider.innerHTML = '';
+           
+           let playList = isFavoritesMode ? favorites : allSeries;
+           
+           if (!isFavoritesMode) {
+               playList = playList.filter(series => !failedSeries.has(series));
+           }
+           
+           const idx = isFavoritesMode ? favCurrentIndex : currentIndex;
+           
+           if (playList.length === 0) {
+               slider.innerHTML = `
+                   <div class="video-item active" style="display: flex; align-items: center; justify-content: center; color: white;">
+                       <div style="text-align: center;">
+                           <div style="font-size: 4rem; margin-bottom: 20px;"><i class="fas fa-face-frown"></i></div>
+                           <div style="font-size: 1.2rem;">没有可播放的视频</div>
+                           <div style="font-size: 1rem; margin-top: 15px; opacity: 0.6;">
+                               ${!isFavoritesMode && failedSeries.size > 0 ? 
+                                 '所有视频都已失败，请在失败记录中重试' : 
+                                 '列表为空'}
+                           </div>
+                       </div>
+                   </div>
+               `;
+               return;
+           }
+           
+           let safeIdx;
+           if (isFavoritesMode) {
+               safeIdx = favCurrentIndex % favorites.length;
+               favCurrentIndex = safeIdx;
+           } else {
+               safeIdx = currentIndex % playList.length;
+               currentIndex = safeIdx;
+           }
+           
+           const indices = [
+               (safeIdx - 1 + playList.length) % playList.length,
+               safeIdx,
+               (safeIdx + 1) % playList.length
+           ];
+           
+           const positions = ['prev', 'active', 'next'];
+           
+           indices.forEach((i, pos) => {
+               const series = playList[i];
+               const item = document.createElement('div');
+               item.className = `video-item ${positions[pos]}`;
+               item.dataset.index = i;
+               item.dataset.series = series;
+               
+               const isFav = favorites.includes(series);
+               const shouldLoop = (pos === 1) && isLoopMode;
+               
+               item.innerHTML = `
+                   <video ${shouldLoop ? 'loop' : ''} playsinline webkit-playsinline x5-video-player-type="h5" 
+                          ${pos === 1 ? 'autoplay' : ''} preload="auto"></video>
+                   <div class="loading-spinner" style="display: ${pos === 1 ? 'block' : 'none'}"></div>
+                   
+                   <div class="video-overlay ${uiHidden ? 'hidden' : ''}">
+                       <div class="series-name">
+                           <i class="fas fa-tag" style="font-size: 0.9rem; color: var(--primary);"></i>
+                           ${series}
+                       </div>
+                       <div class="video-meta">
+                           <span class="tag"><i class="fas ${isFavoritesMode ? 'fa-heart' : 'fa-list'}"></i> ${isFavoritesMode ? '喜欢' : '系列'}</span>
+                           <span><i class="fas fa-play"></i> ${i + 1} / ${playList.length}</span>
+                       </div>
+                   </div>
+                   
+                   <div class="action-sidebar ${uiHidden ? 'hidden' : ''}">
+                       <div class="action-btn ${isFav ? 'liked' : ''}" onclick="toggleLike('${series}', this)">
+                           <div class="action-icon">
+                               <i class="${isFav ? 'fas' : 'far'} fa-heart heart-icon"></i>
+                           </div>
+                           <span class="action-count">${isFav ? '已喜欢' : '喜欢'}</span>
+                       </div>
+                       
+                       <div class="action-btn ${isLoopMode ? 'loop-active' : ''}" onclick="toggleLoopMode(this)">
+                           <div class="action-icon">
+                               <i class="fas ${isLoopMode ? 'fa-repeat' : 'fa-forward'}"></i>
+                           </div>
+                           <span class="action-count">${isLoopMode ? '循环' : '连续'}</span>
+                       </div>
+                       
+                       <div class="action-btn" onclick="copyLink('${series}')">
+                           <div class="action-icon">
+                               <i class="fas fa-share-nodes"></i>
+                           </div>
+                           <span class="action-count">分享</span>
+                       </div>
+                   </div>
+                   
+                   <div class="progress-container" onclick="seekVideo(event, this)">
+                       <span class="time-display" id="timeDisplay-${i}">00:00 / 00:00</span>
+                       <div class="progress-bar-container">
+                           <div class="progress-bar" id="progressBar-${i}"></div>
+                       </div>
+                   </div>
+               `;
+               
+               slider.appendChild(item);
+               
+               if (pos === 1) {
+                   loadVideoSource(item, series, i);
+                   const nextIdx = (safeIdx + 1) % playList.length;
+                   const nextSeries = playList[nextIdx];
+                   preloadVideoBlob(nextSeries);
+               }
+           });
+           
+           document.title = isFavoritesMode ? '喜欢列表' : '短视频';
+       }
+       
+       async function loadVideoSource(item, series, index) {
+           const video = item.querySelector('video');
+           const spinner = item.querySelector('.loading-spinner');
+           const fetchingTip = document.getElementById('fetchingTip');
+           const timeDisplay = document.getElementById(`timeDisplay-${index}`);
+           const progressBar = document.getElementById(`progressBar-${index}`);
+           
+           if (loadTimeout) {
+               clearTimeout(loadTimeout);
+               loadTimeout = null;
+           }
+           
+           if (item.classList.contains('active')) {
+               fetchingTip.classList.add('show');
+           }
+           
+           spinner.style.display = 'block';
+           
+           let videoUrl = videoBlobCache.get(series);
+           
+           if (!videoUrl) {
+               videoUrl = await fetchVideoUrl(series);
+               if (videoUrl) {
+                   preloadVideoBlob(series);
+               }
+           }
+           
+           fetchingTip.classList.remove('show');
+           
+           if (videoUrl) {
+               video.src = videoUrl;
+               
+               loadTimeout = setTimeout(() => {
+                   if (spinner.style.display === 'block') {
+                       spinner.style.display = 'none';
+                       handleFail(series, '加载超时');
+                   }
+               }, 3000);
+               
+               video.addEventListener('loadeddata', () => {
+                   if (loadTimeout) {
+                       clearTimeout(loadTimeout);
+                       loadTimeout = null;
+                   }
+                   spinner.style.display = 'none';
+                   if (item.classList.contains('active') && isPlaying) {
+                       video.play().catch(e => console.log('自动播放被阻止'));
+                   }
+                   
+                   resetFailCount(series);
+                   
+                   if (timeDisplay) {
+                       timeDisplay.textContent = `00:00 / ${formatTime(video.duration)}`;
+                   }
+               });
+               
+               video.addEventListener('waiting', () => {
+                   if (!videoBlobCache.has(series)) {
+                       spinner.style.display = 'block';
+                   }
+               });
+               
+               video.addEventListener('playing', () => {
+                   spinner.style.display = 'none';
+                   resetFailCount(series);
+               });
+               
+               video.addEventListener('timeupdate', () => {
+                   if (item.classList.contains('active') && video.duration) {
+                       const progress = (video.currentTime / video.duration) * 100;
+                       if (progressBar) progressBar.style.width = progress + '%';
+                       
+                       if (timeDisplay) {
+                           timeDisplay.textContent = `${formatTime(video.currentTime)} / ${formatTime(video.duration)}`;
+                       }
+                   }
+               });
+               
+               video.addEventListener('ended', () => {
+                   if (item.classList.contains('active')) handleVideoEnded(item);
+               });
+               
+               video.addEventListener('click', () => togglePlay(item));
+               
+               video.addEventListener('error', (e) => {
+                   if (loadTimeout) {
+                       clearTimeout(loadTimeout);
+                       loadTimeout = null;
+                   }
+                   spinner.style.display = 'none';
+                   
+                   handleFail(series, '视频加载错误');
+               });
+               
+               video.load();
+           } else {
+               spinner.style.display = 'none';
+               handleFail(series, '获取视频链接失败');
+           }
+       }
+       
+       function handleVideoEnded(item) {
+           if (isLoopMode) {
+               const video = item.querySelector('video');
+               if (video) {
+                   video.currentTime = 0;
+                   video.play().catch(e => console.log('播放被阻止'));
+               }
+           } else {
+               hideAutoplayHint();
+               if (isFavoritesMode) {
+                   playNextFav();
+               } else {
+                   playNext();
+               }
+           }
+       }
+       
+       function toggleLoopMode(btn) {
+           isLoopMode = !isLoopMode;
+           
+           const activeItem = document.querySelector('.video-item.active');
+           if (activeItem) {
+               const video = activeItem.querySelector('video');
+               if (video) {
+                   video.loop = isLoopMode;
+               }
+           }
+           
+           const loopBtns = document.querySelectorAll('.action-btn[onclick*="toggleLoopMode"]');
+           loopBtns.forEach(loopBtn => {
+               if (isLoopMode) {
+                   loopBtn.classList.add('loop-active');
+                   const icon = loopBtn.querySelector('.action-icon i');
+                   if (icon) {
+                       icon.className = 'fas fa-repeat';
+                   }
+                   const countSpan = loopBtn.querySelector('.action-count');
+                   if (countSpan) countSpan.textContent = '循环';
+               } else {
+                   loopBtn.classList.remove('loop-active');
+                   const icon = loopBtn.querySelector('.action-icon i');
+                   if (icon) {
+                       icon.className = 'fas fa-forward';
+                   }
+                   const countSpan = loopBtn.querySelector('.action-count');
+                   if (countSpan) countSpan.textContent = '连续';
+               }
+           });
+           
+           showToast(isLoopMode ? '已开启循环播放' : '已开启连续播放', 'info');
+       }
+       
+       function togglePlay(item) {
+           const video = item.querySelector('video');
+           const centerPlay = document.getElementById('centerPlay');
+           
+           if (!video.src) return;
+           
+           if (video.paused) {
+               video.play();
+               isPlaying = true;
+               hideAutoplayHint();
+               centerPlay.innerHTML = '<i class="fas fa-play"></i>';
+           } else {
+               video.pause();
+               isPlaying = false;
+               centerPlay.innerHTML = '<i class="fas fa-pause"></i>';
+               centerPlay.classList.add('show');
+               setTimeout(() => centerPlay.classList.remove('show'), 1000);
+           }
+       }
+       
+       function seekVideo(e, container) {
+           const video = container.parentElement.querySelector('video');
+           if (!video.duration) return;
+           
+           const progressBarContainer = container.querySelector('.progress-bar-container');
+           if (!progressBarContainer) return;
+           
+           const rect = progressBarContainer.getBoundingClientRect();
+           const pos = (e.clientX - rect.left) / rect.width;
+           
+           const seekTime = Math.max(0, Math.min(pos, 1)) * video.duration;
+           video.currentTime = seekTime;
+       }
+       
+       function showAutoplayHint() {
+           const hint = document.getElementById('autoplayHint');
+           const countdown = document.getElementById('countdown');
+           hint.classList.add('show');
+           
+           let count = 3;
+           countdown.textContent = count;
+           
+           countdownTimer = setInterval(() => {
+               count--;
+               countdown.textContent = count;
+               if (count <= 0) {
+                   clearInterval(countdownTimer);
+                   hint.classList.remove('show');
+                   if (isFavoritesMode) {
+                       playNextFav();
+                   } else {
+                       playNext();
+                   }
+               }
+           }, 1000);
+       }
+       
+       function hideAutoplayHint() {
+           document.getElementById('autoplayHint').classList.remove('show');
+           clearTimeout(autoplayTimer);
+           clearInterval(countdownTimer);
+       }
+       
+       function playNext() {
+           hideAutoplayHint();
+           if (loadTimeout) {
+               clearTimeout(loadTimeout);
+               loadTimeout = null;
+           }
+           
+           const playList = allSeries.filter(series => !failedSeries.has(series));
+           
+           if (playList.length === 0) {
+               showToast('没有可播放的视频', 'error');
+               return;
+           }
+           
+           let nextIndex = currentIndex + 1;
+           
+           if (nextIndex >= allSeries.length) {
+               nextIndex = 0;
+           }
+           
+           let attempts = 0;
+           while (failedSeries.has(allSeries[nextIndex]) && attempts < allSeries.length) {
+               nextIndex = (nextIndex + 1) % allSeries.length;
+               attempts++;
+           }
+           
+           if (attempts >= allSeries.length) {
+               showToast('没有可播放的视频', 'error');
+               return;
+           }
+           
+           currentIndex = nextIndex;
+           renderVideos();
+           isPlaying = true;
+       }
+       
+       function playNextFav() {
+           hideAutoplayHint();
+           if (loadTimeout) {
+               clearTimeout(loadTimeout);
+               loadTimeout = null;
+           }
+           
+           if (favorites.length === 0) {
+               showToast('喜欢列表为空', 'error');
+               return;
+           }
+           
+           favCurrentIndex = (favCurrentIndex + 1) % favorites.length;
+           
+           renderVideos();
+           isPlaying = true;
+           updateFavoritesUI();
+       }
+       
+       function playPrev() {
+           hideAutoplayHint();
+           if (loadTimeout) {
+               clearTimeout(loadTimeout);
+               loadTimeout = null;
+           }
+           
+           if (isFavoritesMode) {
+               if (favorites.length === 0) return;
+               favCurrentIndex = (favCurrentIndex - 1 + favorites.length) % favorites.length;
+           } else {
+               const playList = allSeries.filter(series => !failedSeries.has(series));
+               
+               if (playList.length === 0) {
+                   showToast('没有可播放的视频', 'error');
+                   return;
+               }
+               
+               let prevIndex = currentIndex - 1;
+               let attempts = 0;
+               
+               while (prevIndex >= 0 && failedSeries.has(allSeries[prevIndex]) && attempts < allSeries.length) {
+                   prevIndex--;
+                   attempts++;
+               }
+               
+               if (prevIndex < 0) {
+                   prevIndex = allSeries.length - 1;
+                   attempts = 0;
+                   while (prevIndex >= 0 && failedSeries.has(allSeries[prevIndex]) && attempts < allSeries.length) {
+                       prevIndex--;
+                       attempts++;
+                   }
+               }
+               
+               if (prevIndex >= 0 && !failedSeries.has(allSeries[prevIndex])) {
+                   currentIndex = prevIndex;
+               } else {
+                   showToast('无法切换到上一个视频', 'error');
+                   return;
+               }
+           }
+           
+           renderVideos();
+           isPlaying = true;
+           updateFavoritesUI();
+       }
+       
+       function playFavoritesMode() {
+           if (favorites.length === 0) {
+               showToast('喜欢列表为空', 'error');
+               return;
+           }
+           
+           isFavoritesMode = true;
+           favCurrentIndex = 0;
+           
+           toggleFavorites();
+           renderVideos();
+           isPlaying = true;
+           
+           showToast('开始播放喜欢的视频', 'success');
+       }
+       
+       function setupGestures() {
+           const slider = document.getElementById('videoSlider');
+           let startY = 0;
+           
+           slider.addEventListener('touchstart', (e) => {
+               startY = e.touches[0].clientY;
+           }, { passive: true });
+           
+           slider.addEventListener('touchend', (e) => {
+               const endY = e.changedTouches[0].clientY;
+               const diff = startY - endY;
+               
+               if (Math.abs(diff) > 80) {
+                   if (diff > 0) {
+                       isFavoritesMode ? playNextFav() : playNext();
+                   } else {
+                       playPrev();
+                   }
+               }
+           }, { passive: true });
+           
+           let wheelTimeout;
+           slider.addEventListener('wheel', (e) => {
+               clearTimeout(wheelTimeout);
+               wheelTimeout = setTimeout(() => {
+                   if (e.deltaY > 50) {
+                       isFavoritesMode ? playNextFav() : playNext();
+                   } else if (e.deltaY < -50) {
+                       playPrev();
+                   }
+               }, 50);
+           });
+       }
+       
+       function toggleLike(series, btn) {
+           const index = favorites.indexOf(series);
+           const heartIcon = btn.querySelector('.heart-icon');
+           const count = btn.querySelector('.action-count');
+           
+           if (index > -1) {
+               favorites.splice(index, 1);
+               btn.classList.remove('liked');
+               heartIcon.className = 'far fa-heart heart-icon';
+               count.textContent = '喜欢';
+               showToast('已取消喜欢', 'info');
+               
+               if (isFavoritesMode && series === favorites[favCurrentIndex]) {
+                   if (favorites.length === 0) {
+                       isFavoritesMode = false;
+                   } else {
+                       favCurrentIndex = favCurrentIndex % favorites.length;
+                   }
+                   renderVideos();
+               }
+               
+               localStorage.removeItem(`thumb_${series}`);
+               delete favoriteUrls[series];
+           } else {
+               fetchVideoUrl(series).then(videoUrl => {
+                   if (videoUrl) {
+                       favoriteUrls[series] = videoUrl;
+                       localStorage.setItem('favoriteUrls', JSON.stringify(favoriteUrls));
+                   }
+               });
+               
+               favorites.push(series);
+               btn.classList.add('liked');
+               heartIcon.className = 'fas fa-heart heart-icon';
+               count.textContent = '已喜欢';
+               showToast('已添加到喜欢列表', 'success');
+               
+               updateFavoritesUI();
+               
+               setTimeout(() => {
+                   generateThumbnail(series).then(thumb => {
+                       if (thumb) {
+                           console.log('缩略图生成成功');
+                       }
+                   });
+               }, 100);
+           }
+           
+           saveFavorites();
+           updateFavoritesUI();
+           updateFavBadge();
+       }
+       
+       function saveFavorites() {
+           localStorage.setItem('videoFavorites', JSON.stringify(favorites));
+           localStorage.setItem('favoriteUrls', JSON.stringify(favoriteUrls));
+       }
+       
+       function updateFavBadge() {
+           const badge = document.getElementById('favBadge');
+           if (favorites.length > 0 && !document.getElementById('favoritesDrawer').classList.contains('open')) {
+               badge.textContent = favorites.length;
+               badge.style.display = 'block';
+           } else {
+               badge.style.display = 'none';
+           }
+       }
+       
+       function updateFailedBadge() {
+           const badge = document.getElementById('failedBadge');
+           if (failedSeries.size > 0 && !document.getElementById('failedDrawer').classList.contains('open')) {
+               badge.textContent = failedSeries.size;
+               badge.style.display = 'block';
+           } else {
+               badge.style.display = 'none';
+           }
+       }
+       
+       function updateFailedUI() {
+           updateErrorList();
+           updateTimeoutList();
+           updateFailedBadge();
+       }
+       
+       function updateFavoritesUI() {
+           const list = document.getElementById('favoritesList');
+           const countSpan = document.querySelector('#favCount');
+           
+           countSpan.textContent = favorites.length;
+           
+           if (favorites.length === 0) {
+               list.innerHTML = `
+                   <div class="empty-favorites">
+                       <div class="empty-icon"><i class="fas fa-heart-crack"></i></div>
+                       <div>还没有喜欢的视频</div>
+                       <div style="font-size: 1rem; margin-top: 15px; opacity: 0.6;">
+                           点击 <i class="fas fa-heart" style="color: var(--primary);"></i> 收藏喜欢的内容
+                       </div>
+                   </div>
+               `;
+               return;
+           }
+           
+           const currentSeries = isFavoritesMode ? favorites[favCurrentIndex] : null;
+           
+           list.innerHTML = favorites.map((series, idx) => {
+               const isActive = series === currentSeries;
+               const thumb = localStorage.getItem(`thumb_${series}`);
+               
+               return `
+                   <div class="favorite-item ${isActive ? 'active' : ''}" onclick="playFromFavorites(${idx})">
+                       <div class="favorite-thumb">
+                           ${thumb ? `<img src="${thumb}" alt="">` : '<i class="fas fa-film"></i>'}
+                           <div class="play-icon"><i class="fas fa-play"></i></div>
+                       </div>
+                       <div class="favorite-info">
+                           <div class="favorite-name">
+                               <i class="fas fa-tag"></i>
+                               ${series}
+                           </div>
+                           <div class="favorite-meta">
+                               ${isActive ? '<span class="playing-badge"><i class="fas fa-music"></i> 播放中</span>' : `<span><i class="fas fa-play"></i> 第 ${idx + 1} 个</span>`}
+                           </div>
+                       </div>
+                       <button class="favorite-remove" onclick="event.stopPropagation(); removeFavorite('${series}')" title="删除">
+                           <i class="fas fa-trash-can"></i>
+                       </button>
+                   </div>
+               `;
+           }).join('');
+       }
+       
+       function playFromFavorites(index) {
+           if (index >= favorites.length) return;
+           
+           favCurrentIndex = index;
+           isFavoritesMode = true;
+           
+           toggleFavorites();
+           renderVideos();
+           isPlaying = true;
+           updateFavoritesUI();
+           showToast(`正在播放: ${favorites[index]}`, 'info');
+       }
+       
+       function removeFavorite(series) {
+           const index = favorites.indexOf(series);
+           if (index > -1) {
+               localStorage.removeItem(`thumb_${series}`);
+               delete favoriteUrls[series];
+               
+               favorites.splice(index, 1);
+               saveFavorites();
+               updateFavoritesUI();
+               updateFavBadge();
+               
+               if (isFavoritesMode) {
+                   if (favorites.length === 0) {
+                       isFavoritesMode = false;
+                       currentIndex = 0;
+                   } else if (index <= favCurrentIndex) {
+                       favCurrentIndex = Math.max(0, favCurrentIndex - 1);
+                   }
+                   renderVideos();
+               }
+               
+               showToast('已从喜欢列表移除', 'info');
+           }
+       }
+       
+       function toggleFavorites() {
+           const drawer = document.getElementById('favoritesDrawer');
+           const overlay = document.getElementById('overlay');
+           const btn = document.getElementById('favBtn');
+           
+           document.getElementById('failedDrawer').classList.remove('open');
+           
+           drawer.classList.toggle('open');
+           overlay.classList.toggle('active');
+           btn.classList.toggle('active');
+           
+           if (drawer.classList.contains('open')) {
+               updateFavoritesUI();
+               setTimeout(preloadThumbnails, 100);
+           }
+           
+           updateFavBadge();
+       }
+       
+       function toggleFailedDrawer() {
+           const drawer = document.getElementById('failedDrawer');
+           const overlay = document.getElementById('overlay');
+           const btn = document.getElementById('failedBtn');
+           
+           document.getElementById('favoritesDrawer').classList.remove('open');
+           
+           drawer.classList.toggle('open');
+           overlay.classList.toggle('active');
+           btn.classList.toggle('active');
+           
+           if (drawer.classList.contains('open')) {
+               updateFailedUI();
+               // 重置位置
+               resetFailedPosition();
+           }
+           
+           updateFailedBadge();
+       }
+       
+       function closeAllDrawers() {
+           document.getElementById('favoritesDrawer').classList.remove('open');
+           document.getElementById('failedDrawer').classList.remove('open');
+           document.getElementById('overlay').classList.remove('active');
+           document.getElementById('favBtn').classList.remove('active');
+           document.getElementById('failedBtn').classList.remove('active');
+           
+           updateFavBadge();
+           updateFailedBadge();
+       }
+       
+       async function copyLink(series) {
+           const videoUrl = await fetchVideoUrl(series);
+           if (videoUrl) {
+               navigator.clipboard.writeText(videoUrl).then(() => {
+                   showToast('视频链接已复制', 'success');
+               });
+           } else {
+               showToast('获取链接失败', 'error');
+           }
+       }
+       
+       function showToast(msg, type = 'info') {
+           const toast = document.getElementById('toast');
+           const icon = toast.querySelector('i');
+           const span = toast.querySelector('span');
+           
+           span.textContent = msg;
+           
+           if (type === 'success') {
+               icon.className = 'fas fa-circle-check';
+               icon.style.color = '#4caf50';
+           } else if (type === 'error') {
+               icon.className = 'fas fa-circle-exclamation';
+               icon.style.color = '#f44336';
+           } else if (type === 'timeout') {
+               icon.className = 'fas fa-hourglass-end';
+               icon.style.color = '#ff9800';
+           } else {
+               icon.className = 'fas fa-circle-info';
+               icon.style.color = 'var(--primary)';
+           }
+           
+           toast.classList.add('show');
+           setTimeout(() => toast.classList.remove('show'), 2000);
+       }
+       
+       init();
+   </script>
+</body>
+</html>
