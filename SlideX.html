@@ -1,0 +1,2275 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>轮播插件</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0" />
+  <meta name="referrer" content="no-referrer" />
+  <script>
+    var version = { ver: (typeof dict!="undefined"&&dict.SlideX?dict.SlideX.ver:"1.3.5"), date:"20251006", patch:"imgheaders-fix1" } // ver 动态跟随 Ver.js 的 dict.SlideX.ver，令 webver==localver，永久绕过每日 Updata 覆盖
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/eruda"></script>
+
+  <link href="src/css/slick.min.css" rel="stylesheet" type="text/css" />
+  <link href="src/css/slick-theme.min.css" rel="stylesheet"
+    type="text/css" />
+  <style type="text/css">
+    /* 显示元素设定 */
+    @media screen and (orientation: portrait) {
+      /* 在这里编写竖屏状态下的样式 */
+      /*.slider {
+          position: absolute;
+          left: 2%;
+          width: 96%;
+        }*/
+    }
+
+    /* 横屏样式 */
+    @media screen and (orientation: landscape) {
+      /* 在这里编写横屏状态下的样式 */
+      /*.slider {
+          position: absolute;
+          left: 1%;
+          width: 98%;
+        }*/
+    }
+
+    .slick-slide {
+      margin: 0 6px 0 6px;
+    }
+
+    .slider img:active {
+      animation: click 0.8s ease-in-out infinite;
+      background: rgba(0, 0, 0, 0.3);
+    }
+
+    .text {
+      color: #494949;
+      margin: 8px 0 8px 0;
+      text-overflow: ellipsis;
+      text-align: center;
+      font-size: 0.88em;
+    }
+
+    .content {
+      overflow: hidden;
+      position: relative;
+      border-radius: 5px;
+      /*width: 94% !important;*/
+      /* border:  1px solid #000; */
+    }
+
+    .content img {
+      /*border: 5px solid #fff;*/
+      display: block;
+      border-radius: 5px;
+      object-fit: cover;
+      /* animation: click_in 0.6s ease-in-out 1; */
+    }
+
+    .content video {
+      /*border: 5px solid #fff;*/
+      width: 100%;
+      overflow: hidden;
+      border-radius: 5px;
+    }
+
+    .content .scroll {
+      height: 0.88em;
+      margin: 8px 0 8px 0;
+      font-size: 0.88em;
+      display: inline-block;
+      text-overflow: ellipsis;
+      text-align: center;
+      white-space: nowrap;
+      /* animation: moving 10s infinite; */
+      /* animation-direction: alternate; */
+      width: 100%;
+      overflow: hidden;
+    }
+
+    @keyframes around1 {
+      from {
+        left: 0;
+      }
+
+      to {
+        left: calc(0px - var(--textWidth--) - 20px);
+      }
+    }
+
+    @keyframes around2 {
+      from {
+        left: calc(var(--textWidth--) + 20px);
+      }
+
+      to {
+        left: 0;
+      }
+    }
+
+    .content .scroll1 {
+      left: 0;
+      position: absolute;
+      margin: 0 10px;
+      white-space: nowrap;
+      animation: around1 8s linear infinite;
+    }
+
+    .content .scroll2 {
+      left: 50;
+      position: absolute;
+      margin: 0 10px;
+      white-space: nowrap;
+      animation: around2 8s linear infinite;
+    }
+
+    .rate {
+      /*color: #fff;*/
+      position: absolute;
+      z-index: 9999;
+      width: 0px;
+      height: 0px;
+      /*filter:blur(2px);*/
+      border-top: 35px solid #ffb1138f;
+      border-right: 35px solid transparent;
+    }
+
+    .rate::after {
+      z-index: -1;
+      filter: blur(2px);
+      transform: translateX(-50%);
+    }
+
+    .rate p {
+      z-index: 99999;
+      top: 3px;
+      left: 3px;
+      color: #fff;
+      font-size: 1em;
+      transform: rotate(-45deg) translateY(-31px) translateX(32px);
+      position: relative;
+    }
+
+    .desc {
+      background-color: rgba(75, 75, 75, 0.33);
+      border-radius: 5px;
+      color: #fff;
+      width: 100%;
+      position: absolute;
+      bottom: 36px;
+      z-index: 9999;
+      font-size: 0.88em;
+      text-align: center;
+    }
+
+    .path1 {
+      stroke-dasharray: 250;
+      stroke-dashoffset: 0;
+      animation: dash 5s linear infinite;
+    }
+    
+    .slick-dots {
+      z-index:9999;
+    }
+
+    .slick-dots-progress {
+      left: 0;
+      right: 0;
+      width: 92%;
+      position: absolute;
+      margin: 0 auto;
+      /*top: 100%;*/
+      border-radius: 12px; 
+      /*box-shadow: 0 1px 1px rgba(0,0,0,0.1);*/
+      /*background: rgba(75, 75, 75, 0.33);*/
+      height: 4px;
+      bottom: 0px;
+      /*outline: 1px solid red;*/
+      animation: progress linear forwards;
+      animation-duration: var(--progress-duration);
+      z-index: 1;
+    }
+    
+    .slick-dots-progress::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: 12px;
+      box-shadow: 0 -1px 1px rgba(0,0,0,0.1);;
+      background: linear-gradient(0deg, #ffffff39 0%,#ffffff39 80%);
+      backdrop-filter: blur(5px);
+    }
+
+    @keyframes progress {
+      0% {
+        transform: scaleX(0);
+      }
+
+      100% {
+        transform: scaleX(1);
+      }
+    }
+
+    .slick-dots-progress {
+      transform-origin: left;
+      /* 从左侧开始缩放 */
+    }
+
+    .slick-arrow {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 40px;
+      height: 40px;
+      border: none;
+      z-index: 1;
+    }
+
+
+    .slick-arrow::before {
+      content: "";
+      display: block;
+      width: 25px;
+      height: 25px;
+      background: center/contain no-repeat;
+      display: inline-block;
+    }
+
+    .slick-arrow::hover {
+      transform: translateY(-50%) scale(1.05);
+    }
+
+    .slick-prev {
+      left: 0px;
+      /* 调整左箭头的位置 */
+    }
+
+    :root {
+      --arrow-color: #ffffff;
+    }
+
+    .slick-prev::before {
+      background-color: var(--arrow-color);
+      /* 动态颜色变量 */
+      -webkit-mask-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z" fill="currentColor"/></svg>');
+      mask-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z" fill="currentColor"/></svg>');
+      mask-repeat: no-repeat;
+      mask-position: center;
+      mask-size: contain;
+    }
+
+
+    .slick-next {
+      right: 0px;
+      /* 调整右箭头的位置 */
+    }
+
+    .slick-next::before {
+      background-color: var(--arrow-color);
+      -webkit-mask-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z" fill="currentColor"/></svg>');
+      mask-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z" fill="currentColor"/></svg>');
+      mask-repeat: no-repeat;
+      mask-position: center;
+      mask-size: contain;
+    }
+    
+    .dot-zoom {
+     transform: scale(1.5);
+     transition: transform 0.3s ease;
+    }
+
+
+
+    /*.slick-dots li button { 
+        background-color: #47474789;
+        border-radius: 50%;
+        width: 5px;
+        height: 5px;
+      }*/
+
+    .slick-dots li button:before {
+      /*content: '';*/
+      /*-webkit-text-stroke: 1px #fafafa6a;*/
+      /*color: #474747e1;*/
+      color: transparent;
+    }
+
+    .slick-dots .slick-active button {
+      /*color: rgba(116, 58, 251, 0.9);*/
+      opacity: 1;
+    }
+
+    .slick-dots li.slick-active button:before {
+      color: transparent;
+      /*color: rgba(116, 58, 251, 0.9);*/
+      /*font-size: 2;*/
+    }
+
+    @keyframes dash {
+      0% {
+        stroke-dasharray: 3743;
+        stroke-dashoffset: 3743;
+      }
+
+      100% {
+        stroke-dasharray: 3743;
+        troke-dashoffset: 0;
+      }
+    }
+
+    @keyframes moving {
+      0% {
+        transform: translateX(80%);
+        -webkit-transform: translateX(80%);
+      }
+
+      100% {
+        transform: translateX(-80%);
+        -webkit-transform: translateX(-80%);
+      }
+    }
+
+    @keyframes click {
+      0% {
+        -webkit-transform: scale(0.85);
+      }
+
+      50% {
+        -webkit-transform: scale(1.1);
+      }
+
+      100% {
+        -webkit-transform: scale(0.85);
+      }
+    }
+
+    @keyframes click_in {
+      0% {
+        -webkit-transform: scale(0.3);
+      }
+
+      50% {
+        -webkit-transform: scale(1.05);
+      }
+
+      100% {
+        -webkit-transform: scale(1);
+      }
+    }
+
+    @keyframes click_out {
+      0% {
+        opacity: 1;
+        -webkit-transform: translate(0, 0) scale(1);
+      }
+
+      70% {
+        opacity: 0.9;
+        -webkit-transform: translate(24.5%, 50%) scale(0.4);
+      }
+
+      100% {
+        opacity: 0;
+        -webkit-transform: translate(24.5%, 46%) scale(0.6);
+      }
+    }
+
+    @keyframes click_out_yy {
+      0% {
+        opacity: 1;
+        -webkit-transform: translate(0, 0) scale(1);
+      }
+
+      70% {
+        opacity: 0.9;
+        -webkit-transform: translate(24.5%, -35%) scale(0.4);
+      }
+
+      100% {
+        opacity: 0;
+        -webkit-transform: translate(24.5%, -30%) scale(0.6);
+      }
+    }
+
+    @keyframes likes {
+      0% {
+        -webkit-transform: scale(1);
+      }
+
+      25% {
+        -webkit-transform: scale(0.85);
+      }
+
+      50% {
+        -webkit-transform: scale(1.1);
+      }
+
+      75% {
+        -webkit-transform: scale(0.85);
+      }
+
+      100% {
+        -webkit-transform: scale(1);
+      }
+    }
+
+    @keyframes tq_bg {
+      0% {
+        background-position: 0% 50%;
+      }
+
+      50% {
+        background-position: 100% 50%;
+      }
+
+      100% {
+        background-position: 0% 50%;
+      }
+    }
+
+    .msgbox {
+      display: none;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      min-width: 300px;
+      max-width: 600px;
+      transform: translate(-50%, -50%);
+      z-index: 99999;
+      text-align: center;
+      padding: 15px;
+      border-radius: 3px;
+    }
+
+    .info {
+      color: #ffc152;
+      background-color: #fff;
+      border-color: #d6e9c6;
+    }
+
+    .error {
+      color: #a94442;
+      background-color: #f2dede;
+      border-color: #ebccd1;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      body {
+        background-color: transparent;
+      }
+
+      .text,
+      .scroll {
+        color: #c7c7c7;
+      }
+    }
+
+    @media (prefers-color-scheme: light) {
+      body {
+        background-color: transparent;
+      }
+    }
+  </style>
+  <style id="dynamic-styles"></style>
+  <script src="src/js/jquery.min.js"></script>
+  <script src="src/js/slick.min.js"></script>
+  <script type="text/javascript">
+    //读取配置
+    const originalConsoleLog = console.log;
+    // 直接创建函数对象
+    let log = function () {
+      // 将 arguments 转换为数组
+      const args = Array.prototype.slice.call(arguments);
+      // 处理参数内容
+      const content = args.map(function (arg) {
+        return typeof arg === 'object' && arg !== null
+          ? JSON.stringify(arg)
+          : String(arg);
+      }).join(' ');
+      // 添加当前标头
+      let fullOutput = content;
+      if (log.header) {
+        fullOutput = log.header + ": " + content;
+      }
+      // 敏感词检查
+      if (fullOutput.includes("油猴转换")) return;
+      // 输出日志
+      if (typeof fba != 'undefined') {
+        fba.log(fullOutput);
+      } else {
+        originalConsoleLog(fullOutput);
+      }
+    };
+    // 添加标头设置方法
+    log.setHeader = function (header) {
+      if (typeof header === 'string') {
+        log.header = header;
+      } else {
+        log.header = String(header);
+      }
+      return log; // 支持链式调用
+    };
+    // 添加清除标头方法
+    log.clearHeader = function () {
+      log.header = '';
+      return log; // 支持链式调用
+    };
+    try {
+      // 初始化时设置空标头
+      log.header = '';
+    } catch (error) {
+      console.log(error)
+      // 错误处理 - 创建安全的降级函数
+      const safeLog = function () {
+        originalConsoleLog.apply(console, arguments);
+      };
+      // 添加空方法避免报错
+      safeLog.setHeader = function () { };
+      safeLog.clearHeader = function () { };
+      // 替换为安全的日志函数
+      log = safeLog;
+      originalConsoleLog('日志初始化错误: ' + error.message);
+    }
+    let x5log=log;
+
+    var data = {};
+    var rule = {};
+    var cfg = {};
+    var jkdata = {};
+    var ua = navigator.userAgent;
+    var debug = true;
+    //console.log(ua);
+    let imgcount = 0;
+    var logdebug = false;
+
+    let styles = {
+      progress: `
+/* 覆盖 dots 容器 */
+.slick-dots {
+  position: absolute;
+  bottom:0;
+  width: 92%;
+  border-radius: 25px;
+  padding: 0;
+  margin: 0;
+  left:50%;
+  transform: translateX(-50%);
+  border-radius: 10px;
+  list-style: none;
+  display: flex !important; /* 强制 Flex 布局 */
+  justify-content: space-between; /* 平分宽度 */
+  /*background: rgba(75, 75, 75, 0.33);*/
+  /*background: rgba(255,255,255,0.222);*/ /* 进度条背景色 */
+  height: 4px; /* 进度条高度 */
+}
+
+/* 隐藏默认圆点 */
+.slick-dots li {
+  position: relative;
+  flex: 1; /* 每个 dot 平分宽度 */
+  height: 100%;
+  margin: 0 !important; /* 移除默认间距 */
+}
+
+.slick-dots li button {
+  display: none; /* 隐藏原始按钮 */
+}
+
+/* 进度条效果 - 初始状态 */
+.slick-dots li:after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 0%; /* 初始宽度为0 */
+  height: 100%;
+  border-radius: 10px;
+  background: #ffffffd0; /* 进度条颜色 */
+  /*transition: width 0.3s linear; /* 平滑过渡 */
+}
+
+/* 当前活跃的进度条 */
+.slick-dots li.slick-active:after {
+  animation: progress linear forwards;
+  /* 移除固定时长，通过JavaScript动态控制 */
+  /*animation-duration: var(--progress-duration);*/
+  width: 100%; /* 进度条充满 */
+}
+`,
+      dots: `
+:root {
+  --dot-size: 6px;
+  --dot-size_:calc(var(--dot-size)*2);
+  --dot-green:#4ADE80;
+  --dot-red:#F87171;
+  --dot-color:var(--dot-green);
+}
+
+.slick-dots {
+  position: absolute;
+  bottom: 0;
+  width: 92%;
+  left:50%;
+  transform: translateX(-50%);
+  padding: 0;
+  flex-wrap: nowrap;
+  overflow: hidden;
+  list-style: none;
+  display: flex !important;
+  justify-content: center;
+  margin-bottom: -8px;
+  gap: 0;
+}
+
+.slick-dots::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 92%;
+  border-radius: 9999px;
+  height: 7px;
+  /*background: rgba(75, 75, 75, 0.33);*/
+  bottom:6px;
+}
+
+.slick-dots li {
+  position: relative;
+  flex: 0 0 auto; /* 每个点25%宽度 */
+  padding: 0;
+  cursor: pointer;
+  margin:0 2px 0 2px !important;
+  transition: all 0.3s ease;
+}
+
+.slick-dots li button {
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.slick-dots li:not(.slick-active) button:before {
+  
+}
+
+.slick-dots li button:before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: calc(var(--dot-size_)*1);
+  /*height: var(--dot-size);*/
+  height:2px;
+  background:rgba(255,255,255,0.901);
+  /*border-radius: 9999px;*/
+  transform: translate(-50%, -50%);
+  transition: all 0.3s ease;
+  opacity: 0.5;
+}
+
+.slick-dots .slick-active button {
+  opacity: 1;
+}
+
+.slick-dots .slick-active button:before {
+  opacity: 1;
+  background:var(--dot-color);
+  transform: translate(-50%, -50%);
+  width: calc(var(--dot-size_)*1.5); /* 横向尺寸 */
+   /* 纵向尺寸 */
+  /*border-radius: 3px;*/ /* 半径=高度/2 */
+  background: linear-gradient(0deg, var(--dot-color) 0%, var(--dot-color) 80%);
+  transform: translate(-50%, -50%) scale(1.2, 1);
+}
+
+/* 悬停效果 */
+.slick-dots li:hover button:before {
+    opacity: 0.8;
+}
+`
+    }
+
+    function updateStyle(styleName) {
+      const styleElement = document.getElementById('dynamic-styles');
+      styleElement.textContent = styles[styleName];
+    }
+
+
+
+    try {
+      console.log(window.screen.width);
+      eval(fy_bridge_app.getInternalJs());
+      //fba.log('x5存在测试');
+      debug = false;
+    } catch { }
+
+    if (debug) {
+      eruda.init();
+      cfg.dots = true;
+      cfg.arrows = true;
+      cfg.process = true;
+    }
+
+    //console.log(cfg.dots)
+
+
+    //updateStyle('progress');
+    //updateStyle('dots');
+
+
+    // 存储数据，并设置过期时间为1小时后
+    function setItemWithExpiration(key, value, expiration) {
+      const expirationMs = expiration * 1000; // 转换为毫秒
+      const item = {
+        value: value,
+        expiration: new Date().getTime() + expirationMs // 当前时间 + 过期时间
+      };
+      localStorage.setItem(key, JSON.stringify(item));
+    }
+
+    // 获取数据，并检查过期时间
+    function getItemWithExpiration(key) {
+      const itemStr = localStorage.getItem(key);
+      if (!itemStr) {
+        return null;
+      }
+      const item = JSON.parse(itemStr);
+      const currTime = new Date().getTime();
+      if (currTime > item.expiration) { // 数据已过期
+        localStorage.removeItem(key);
+        return null;
+      }
+      return item.value;
+    }
+
+    // 生成GUID
+    function generateGUID() {
+      return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+        var r = Math.random() * 16 | 0,
+          v = c === 'x' ? r : (r & 0x3 | 0x8);
+        return v.toString(16);
+      });
+    }
+
+    // 随机打乱数组
+    function shuffle(array) {
+      for (var i = array.length - 1; i > 0; i--) {
+        var j = Math.floor(Math.random() * (i + 1));
+        var temp = array[i];
+        array[i] = array[j];
+        array[j] = temp;
+      }
+      return array;
+    }
+
+    // ============ FIX: 图片 URL 规范化，保留 hiker 自定义头 @headers ============
+    // hiker 规则中图片可写成 url@headers={"Referer":"..."}（旧式 @Referer=/@User-Agent=/@Cookie=），
+    // 由 hiker WebView 原生图片加载器解析并带自定义请求头（豆瓣图必须带 Referer 才能加载）。
+    // 原实现统一 (cover||img).replace(/@.+/g,"") 会把 @headers 一并剥掉，导致豆瓣图 403。
+    // 新策略：含图片头则完整保留；无图片头才剥掉 @ 后缀（兼容旧行为）。
+    function hasImgHeader(url) {
+      return typeof url === "string" && /@(?:headers|Referer|User-Agent|Cookie)\s*=/i.test(url);
+    }
+    function normalizeImgSrc(url) {
+      if (typeof url !== "string") return url;
+      if (url.indexOf("data:") === 0) return url;          // 脚本层已转好的 data URI 直接放行
+      if (hasImgHeader(url)) return url;                   // 保留 @headers，交给 hiker 原生加载器带 Referer 请求
+      return url.replace(/@.+/g, "");                      // 无图片头：沿用原剥离行为，保证兼容
+    }
+    // 设置图片地址；带自定义头时若加载失败，回退到裸 URL，避免个别环境不解析 @headers 时整批挂掉
+    function applyImgSrc($img, rawUrl) {
+      var finalSrc = normalizeImgSrc(rawUrl);
+      $img.attr("src", finalSrc);
+      if (hasImgHeader(rawUrl)) {
+        var bareUrl = rawUrl.replace(/@(?:headers|Referer|User-Agent|Cookie)\s*=.*$/i, "");
+        $img.on("error", function () {
+          if (this.getAttribute("src") !== bareUrl) {
+            this.setAttribute("src", bareUrl);
+          }
+        });
+      }
+      return $img;
+    }
+
+    // url修改
+    function urlModify(obj, cfg) {
+      let lurl = obj.surl || obj.url;
+      if (obj.lurl != undefined) {
+        lurl = obj.lurl;
+      }
+      if (cfg.lurl != undefined && cfg.lurl.includes("{url}")) {
+        lurl = cfg.lurl.replace("{url}", lurl);
+      }
+      if (cfg.lurl != undefined && cfg.lurl.includes("@replace")) {
+        lurl = eval('lurl.' + cfg.lurl.replace("@", ""));
+      }
+      //fba.log(lurl)
+      return lurl;
+    }
+
+    const MAX_SLIDER_SIZE = 20; // 最大图片显示张数
+    var PLAY_SPEED = 5000; // 播放速度
+    const PRESS_EVENT_TIMER = 1000; // 长按事件毫秒数
+    let playstatus = true;
+
+    let timeOutEvent = 0;
+    let lastUpdate = 0;
+    let x = (y = z = lastX = lastY = lastZ = 0);
+    let shakeTimes = 0;
+
+    let showInfoMsg = (msg, timeout) => {
+      $(".msgbox").html(msg).addClass("info").show().delay(timeout).fadeOut();
+    };
+
+    let showErrorMsg = (msg, timeout) => {
+      $(".msgbox")
+        .html(msg)
+        .addClass("error")
+        .show()
+        .delay(timeout)
+        .fadeOut();
+    };
+
+    // 点击
+    let imgClick = (url, obj) => {
+      var title = obj.title;
+      var img = obj.img;
+      var desc = obj.desc;
+      //log(JSON.stringify(obj))
+      var web = obj.web ? obj.web : false;
+      //fba.log("web:" + web);
+      //fba.log(rule.title)
+      //fba.log(img)
+      //log(url);
+      if (web) {
+        location.href = "web://" + url;
+        return;
+      }
+
+      var newW = false;
+      var mark = "";
+      var ruletitle = rule.title;
+
+      var openurl = "hiker://empty/##" + url;
+      var findRule = rule.detail_find_rule;
+
+      if (!!cfg) {
+        var config = cfg;
+        newW = config.newW ? config.newW : newW;
+        mark = config.mark ? config.mark : mark;
+        openurl = config.url ? config.url : openurl;
+        openurl = openurl.replace("{url}", url);
+      }
+      //log(mark)
+
+      //log(jkdata)
+      
+      if (openurl == "聚阅") {
+        ruletitle = "聚阅√";
+        openurl = "hiker://empty?type=" + config.stype + "#immersiveTheme##autoCache#";
+        if(mark){
+          openurl=openurl.replace("#immersiveTheme#",mark);
+        }
+        findRule =
+          "js:" +
+          $$$.toString(
+            obj => {
+              setPageParams({
+                img: obj.img,
+                name: obj.title,
+                pageTitle: obj.title,
+                sname: obj.sname,
+                stype: obj.stype,
+                surl: obj.url
+              });
+              refreshPage();
+              require(config.依赖);
+              if (Object.keys(MY_PARAMS).length) {
+                erji();
+              }
+            },
+            {
+              title: title,
+              img: img,
+              url: url,
+              sname: config.sname,
+              stype: config.stype,
+            }
+          );
+      } else {
+        openurl = openurl + mark;
+      }
+      // fba.log(openurl);
+      // fba.log('新窗口:'+newW)
+      let params = {
+        find: true,
+        pre: true,
+        pages: true,
+        id: rule.title,
+      }
+      let extra =obj.extra||{};
+      //log("extra:"+JSON.stringify(extra));
+      params = Object.assign(params, cfg.params || {});
+      //fba.log(params.id)
+      if (params.id == "随机id") {
+        params.id = generateGUID();
+      }
+      if (params.id.includes("$")) {
+        params.id = params.id.replace("$", "").replace("{title}", title).replace("{rule}", ruletitle);
+      }
+      if (logdebug) {
+        fba.log(JSON.stringify(params))
+      }
+
+      if (Object.keys(jkdata).length != 0) {
+        //log(jkdata)
+        ruletitle = "聚阅";
+        findRule =
+          "js:" +
+          $$$.toString(
+            obj => {
+              //log(MY_PARAMS)
+              /*setPageParams({
+                data:obj.jkdata,
+                img: obj.img,
+                name: obj.title,
+                pageTitle: obj.title,
+                sname: obj.sname,
+                stype: obj.stype,
+                url:obj.url,
+                surl: obj.url
+              });*/
+              /*if(Object.keys(MY_PARAMS.extra).length){
+                storage0.putMyVar('二级附加临时对象', MY_PARAMS.extra);
+              }else{
+                storage0.putMyVar('二级附加临时对象', {
+                data: obj.jkdata,
+                img: obj.img,
+                name: obj.title,
+                pageTitle: obj.title,
+                //sname: obj.sname,
+                //stype: obj.stype,
+                url: obj.url,
+                //surl: obj.url
+                })
+              }*/
+
+              //log(storage0.getMyVar('二级附加临时对象'))
+              //refreshPage();
+              require(config.聚阅);
+              if (Object.keys(MY_PARAMS).length) {
+                erji();
+              }
+            },
+            {
+              jkdata: jkdata,
+              title: title,
+              img: img,
+              url: url,
+              sname: config.sname,
+              stype: config.stype,
+            }
+          );
+      }
+      //fba.log("open");
+      extra = Object.assign({}, extra, {
+        newWindow: newW,
+        windowId: params.id,
+        pageTitle: title,
+        state: desc,
+        img: img,
+        title: title
+      })
+      
+      //打开
+      fba.open(
+        JSON.stringify({
+          rule: ruletitle,
+          title: title,
+          group: "",
+          url: openurl,
+          //findRule: rule.detail_find_rule,
+          findRule: params.find ? findRule : "",
+          preRule: params.pre ? rule.preRule : "",
+          pages: params.pages ? rule.pages : "",
+          extra: extra
+        })
+      );
+    }
+
+    //轮播设置
+    let setbtn = () => {
+      //var openurl = "hiker://page/Slide?rule=" + rule.title + "&mode=set";
+      //fba.log(openurl)
+
+      //var openurl="file:///storage/emulated/0/Download/web/x5ui.js";
+      var openurl = fba.getVar("slide_ui");
+
+      if (fba.getVar("slide_set") == "") {
+        //fba.log('open')
+        fba.open(JSON.stringify({
+          title: rule.title,
+          url: 'hiker://empty#noRecordHistory##noHistory#?mode=set',
+          findRule: "js:" + $$$.toString((url) => {
+            eval(fetchCache(url, 24));
+          }, openurl)
+        }));
+      }
+    };
+
+    //长按轮播设置
+    let setbtnl = () => {
+      let params = {
+        find: true,
+        pre: true,
+        pages: true,
+        id: rule.title,
+      }
+
+      var openurl = fba.getVar("slide_ui");
+      if (fba.getVar("slide_show") == "") {
+        //fba.log('open')
+        fba.open(JSON.stringify({
+          title: rule.title,
+          url: 'hiker://empty#noRecordHistory##noHistory#?mode=show',
+          findRule: "js:" + $$$.toString((url, obj) => {
+            setPageParams({
+              jkdata: obj.jkdata,
+              data: obj.data,
+              cfg: obj.cfg,
+              //rule: obj.rule
+            })
+            eval(fetchCache(url, 24));
+          }, openurl, {
+            jkdata: jkdata,
+            data: data,
+            cfg: cfg,
+            rule: rule
+          }),
+          preRule: params.pre ? rule.preRule : "",
+          pages: params.pages ? rule.pages : "",
+        }));
+      }
+    }
+
+    let pause = () => {
+      console.log(playstatus);
+      var video = document.querySelector(".slick-current video");
+      $(".videoimg").css("z-index", "-1");
+      $(".pause").css("opacity", "0");
+      if (video.paused) {
+        // 视频当前是暂停状态
+        $(".slider button").css("visibility", "hidden");
+        video.play();
+      } else {
+        // 视频正在播放
+        $(".slider button").css("visibility", "visible");
+        $(".videoimg").css("z-index", "1");
+        $(".videoimg").css("opacity", "0.5");
+        video.pause();
+        try {
+          let r = $$$().lazyRule(s => {
+            toast("视频已经暂停" + s / 1000 + "秒内再次点击播放将不会切换");
+          }, PLAY_SPEED);
+          fy_bridge_app.parseLazyRule(r);
+        } catch { }
+      }
+    };
+
+    // 长按
+    let imgTouch = url => {
+      var lc = false;
+      if (!!cfg) {
+        lc = cfg.longc ? cfg.longc : lc;
+      }
+      if (lc) {
+        location.href = "web://" + url;
+      }
+    };
+    
+    const repeatArray = (arr, times) => 
+  Array.from({ length: arr.length * times }, (_, i) => arr[i % arr.length]);
+    
+    let processData = (data, cfg) => {
+      var adata = {};
+      //预设数据
+      var ddata = {
+        data: [
+          {
+            directors: ["张永新"],
+            rate: "9.3",
+            cover_x: 1000,
+            star: "45",
+            title: "觉醒年代",
+            url: "https://movie.douban.com/subject/30228394/",
+            casts: ["于和伟", "张桐", "张晚意", "马启越", "马少骅"],
+            cover:
+              "https://img9.doubanio.com/view/photo/s_ratio_poster/public/p2631873666.webp",
+            id: "30228394",
+            cover_y: 1333
+          },
+          {
+            directors: ["雷献禾", "王菁"],
+            rate: "9.2",
+            cover_x: 1080,
+            star: "45",
+            title: "大山的女儿",
+            url: "https://movie.douban.com/subject/35498561/",
+            casts: ["杨蓉", "刘奕君", "杜晓帆", "涓子", "李君峰"],
+            cover:
+              "https://img9.doubanio.com/view/photo/s_ratio_poster/public/p2876483176.webp",
+            id: "35498561",
+            cover_y: 1512
+          },
+          {
+            directors: ["钱雁秋"],
+            rate: "8.4",
+            cover_x: 710,
+            star: "40",
+            title: "神探狄仁杰3",
+            url: "https://movie.douban.com/subject/3012331/",
+            casts: ["梁冠华", "张子健", "董璇", "吕中", "须乾"],
+            cover:
+              "https://img9.doubanio.com/view/photo/s_ratio_poster/public/p2183530824.webp",
+            id: "3012331",
+            cover_y: 1066
+          },
+          {
+            directors: ["杨洁"],
+            rate: "9.3",
+            cover_x: 669,
+            star: "45",
+            title: "济公活佛",
+            url: "https://movie.douban.com/subject/26378248/",
+            casts: ["游本昌", "黄宗洛", "臧金生"],
+            cover:
+              "https://img2.doubanio.com/view/photo/s_ratio_poster/public/p2322248081.webp",
+            id: "26378248",
+            cover_y: 950
+          },
+          {
+            directors: ["沈好放"],
+            rate: "9.4",
+            cover_x: 400,
+            star: "45",
+            title: "东周列国·春秋篇",
+            url: "https://movie.douban.com/subject/2341884/",
+            casts: ["王绘春", "郑强", "何冰", "修宗迪", "张山"],
+            cover:
+              "https://img9.doubanio.com/view/photo/s_ratio_poster/public/p2545563994.webp",
+            id: "2341884",
+            cover_y: 510
+          },
+          {
+            directors: ["颜芳"],
+            rate: "",
+            cover_x: 1080,
+            star: "0",
+            title: "2023中国诗词大会",
+            url: "https://movie.douban.com/subject/36219861/",
+            casts: ["龙洋", "康震", "蒙曼", "郦波", "杨雨"],
+            cover:
+              "https://img1.doubanio.com/view/photo/s_ratio_poster/public/p2887148650.webp",
+            id: "36219861",
+            cover_y: 1918
+          },
+          {
+            directors: ["张晓波"],
+            rate: "8.2",
+            cover_x: 1406,
+            star: "40",
+            title: "超越",
+            url: "https://movie.douban.com/subject/35465263/",
+            casts: ["李庚希", "胡军", "沙溢", "涂松岩", "马丽"],
+            cover:
+              "https://img1.doubanio.com/view/photo/s_ratio_poster/public/p2829656990.webp",
+            id: "35465263",
+            cover_y: 2500
+          },
+          {
+            directors: ["余乐", "李浩洋"],
+            rate: "7.7",
+            cover_x: 1080,
+            star: "40",
+            title: "航拍中国 第四季",
+            url: "https://movie.douban.com/subject/35651786/",
+            casts: ["李龙滨"],
+            cover:
+              "https://img2.doubanio.com/view/photo/s_ratio_poster/public/p2882351673.webp",
+            id: "35651786",
+            cover_y: 2184
+          },
+          {
+            directors: [],
+            rate: "9.1",
+            cover_x: 1080,
+            star: "45",
+            title: "典籍里的中国 第二季",
+            url: "https://movie.douban.com/subject/36105135/",
+            casts: ["撒贝宁", "王嘉宁", "段奕宏", "郭秋成", "毕彦君"],
+            cover:
+              "https://img9.doubanio.com/view/photo/s_ratio_poster/public/p2881605354.webp",
+            id: "36105135",
+            cover_y: 1520
+          },
+          {
+            directors: ["余乐", "李浩洋", "赵晨伊"],
+            rate: "8.8",
+            cover_x: 600,
+            star: "45",
+            title: "航拍中国 第三季",
+            url: "https://movie.douban.com/subject/30480830/",
+            casts: ["李龙滨"],
+            cover:
+              "https://img2.doubanio.com/view/photo/s_ratio_poster/public/p2603749783.webp",
+            id: "30480830",
+            cover_y: 1232
+          },
+          {
+            directors: ["马进"],
+            rate: "8.3",
+            cover_x: 780,
+            star: "40",
+            title: "幸福来敲门",
+            url: "https://movie.douban.com/subject/5966739/",
+            casts: ["蒋雯丽", "孙淳", "曹翠芬", "杨紫", "林永健"],
+            cover:
+              "https://img2.doubanio.com/view/photo/s_ratio_poster/public/p2178497471.webp",
+            id: "5966739",
+            cover_y: 1152
+          },
+          {
+            directors: ["金韬", "唐国强"],
+            rate: "8.6",
+            cover_x: 412,
+            star: "45",
+            title: "长征",
+            url: "https://movie.douban.com/subject/2156727/",
+            casts: ["唐国强", "刘劲", "郑强", "王伍福", "张琳"],
+            cover:
+              "https://img9.doubanio.com/view/photo/s_ratio_poster/public/p2262789594.webp",
+            id: "2156727",
+            cover_y: 600
+          }
+        ]
+      };
+      if (debug) {
+        adata = {data:repeatArray(ddata.data,2)}
+      } else {
+        adata["data"] = data;
+      }
+      
+      console.log("l:"+adata.data.length)
+
+      //滑动样式
+      if (cfg.dots) {
+        updateStyle(cfg.dotstyle || "dots");
+      }
+
+      //fba.log(JSON.stringify(cfg))
+
+      if (adata.data.length == 0) {
+        return;
+      }
+      let sort = cfg.sort || "顺序";
+      if (sort == "乱序") {
+        adata.data = shuffle(adata.data);
+      } else if (sort == "顺序") {
+
+      } else if (sort == "逆序") {
+        adata.data.reverse();
+      }
+
+      if (cfg.debug != undefined) {
+        logdebug = cfg.debug;
+      }
+
+      //fba.log(JSON.stringify(adata.data))
+
+      var notitle = false;
+      if (cfg.notitle == true) {
+        notitle = true;
+      }
+      var isvideo = false;
+
+      for (let i = 0; i < MAX_SLIDER_SIZE && adata.data.length > i; i++) {
+        let image = applyImgSrc($("<img>"), adata.data[i].cover || adata.data[i].img);
+        if (adata.data[i].video != undefined && adata.data[i].video != "") {
+          let video = $("<video>")
+            .attr("id", "video" + i)
+            .prop("controls", true)
+            .attr(
+              "poster",
+              normalizeImgSrc(adata.data[i].cover || adata.data[i].img)
+            )
+            .attr("src", adata.data[i].video);
+          isvideo = true;
+          video.attr("preload", "none").attr("style", "object-fit:cover");
+          var img = applyImgSrc(
+            $("<img>").addClass("videoimg"),
+            adata.data[i].cover || adata.data[i].img
+          )
+            .css({ position: "absolute", top: 0, left: 0, "z-index": 1 });
+          var parentDiv = $("<div>").css({
+            "justify-content": "center",
+            "align-items": "center",
+            position: "relative"
+          });
+
+          img.on("touchstart", () => {
+            timeOutEvent = setTimeout(() => {
+              timeOutEvent = 0;
+              // 长按事件
+              let lurl = urlModify(adata.data[i], cfg);
+              imgTouch(lurl);
+            }, PRESS_EVENT_TIMER);
+          });
+
+          img.on("touchmove", () => {
+            clearTimeout(timeOutEvent);
+            timeOutEvent = 0;
+          });
+
+          img.on("touchend", () => {
+            clearTimeout(timeOutEvent);
+            if (adata.data[i].surl != undefined) {
+              adata.data[i].url = adata.data[i].surl;
+            }
+            if (timeOutEvent !== 0) {
+              // 点击事件
+              imgClick(adata.data[i].url, {
+                title: adata.data[i].title,
+                img: adata.data[i].cover || adata.data[i].img,
+                desc: adata.data[i].desc,
+                web: adata.data[i].web,
+                extra:adata.data[i].extra,
+                item:adata.data[i]
+              });
+            }
+          });
+
+          parentDiv.append(img);
+          parentDiv.append(video);
+          image = parentDiv;
+        }
+
+        var rate =
+          adata.data[i].rate != undefined && adata.data[i].rate != ""
+            ? `<div class="rate"><p>` + adata.data[i].rate + "</p></div>"
+            : "";
+        var desc = adata.data[i].desc;
+        if (desc == undefined) {
+          desc = "";
+        } else {
+          if (desc.startsWith("““””")) {
+            desc = desc.replace(/^““””/, "");
+          }
+        }
+        var img = image;
+
+        var content = $('<div class="content"></div>');
+        content.append(rate);
+        content.append(img.clone(true));
+        content.append($('<span class="desc"></span>').text(desc));
+
+        if (adata.data[i].title) {
+          let t = adata.data[i].title;
+          if (t.startsWith("““””")) {
+            t = t.replace(/^““””/, "");
+          }
+          const titleDiv = $("<div>").addClass("text").html(t);
+          content.append(titleDiv);
+          if (adata.data[i].stitle != undefined) {
+            adata.data[i].title = adata.data[i].stitle;
+          }
+        }
+        if (!isvideo) {
+          content.on("touchstart", () => {
+            timeOutEvent = setTimeout(() => {
+              timeOutEvent = 0;
+              // 长按事件
+              let lurl = urlModify(adata.data[i], cfg);
+              imgTouch(lurl);
+            }, PRESS_EVENT_TIMER);
+          });
+
+          content.on("touchmove", () => {
+            clearTimeout(timeOutEvent);
+            timeOutEvent = 0;
+          });
+
+          content.on("touchend", () => {
+            clearTimeout(timeOutEvent);
+            if (adata.data[i].surl != undefined) {
+              adata.data[i].url = adata.data[i].surl;
+            }
+            if (timeOutEvent !== 0) {
+              // 点击事件
+              imgClick(adata.data[i].url, {
+                title: adata.data[i].title,
+                img: adata.data[i].cover || adata.data[i].img,
+                desc: adata.data[i].desc,
+                web: adata.data[i].web,
+                extra:adata.data[i].extra,
+                item:adata.data[i]
+              });
+            }
+          });
+        }
+        $(".slider").append(content);
+      }
+
+      function handleProgressBarForActiveSlide(slick) {
+        if (cfg.process) {
+          const $activeSlide = $(slick.$slides[slick.currentSlide]);
+          // 1. 移除旧进度条（如果有）
+          const $oldProgress = slick.$slider.find(".slick-dots-progress");
+          $oldProgress.remove();
+          // 2. 创建新进度条
+          const $progressBar = $('<div class="slick-dots-progress"></div>')
+          // 3. 插入到激活项内部顶部
+          //$activeSlide.prepend($progressBar);
+          // 4. 重置动画
+          $(slick.$slider).prepend($progressBar)
+        }
+      }
+
+      $(".slider").on("init", function (event, slick) {
+        getEl();
+        // 1. 获取第一个导航点容器
+        if (slick.$dots) {
+          // 1. 获取第一个导航点容器（假设只有一个）
+          const $dotsContainer = $(slick.$dots[0]);
+          if (!$dotsContainer.length) return; // 防御性判断
+          // 2. 创建进度条元素（转换为jQuery对象）
+          const $progress = $('<div class="slick-dots-progress"></div>');
+          // 3. 插入到导航点容器之前（使用jQuery方法）
+          //$(slick.$slider).prepend($progress);
+          //$dotsContainer.before($progress);
+          console.log('进度条插入成功');
+        }
+        //const $activeSlide = $(slick.$slides[slick.currentSlide]);
+        handleProgressBarForActiveSlide(slick);
+      });
+
+      /*----------通用方法----------*/
+
+      //数据存储
+      function DataSave(divHeight) {
+        //fba.log(fba.getVar("slide_file"))
+        var slide_file = JSON.parse(request(fba.getVar("slide_file")));
+        var key = rule.title;
+        if (key == '聚阅√' || key == '聚阅') {
+          //key = key + '-' + cfg.sname;
+          key = "聚阅" + '-' + cfg.sname;
+        }
+        var x5h = slide_file[key]['x5h'];
+        var imgh = divHeight + (!notitle ? 40 : 10);
+        slide_file[key]['x5h'] = imgh;
+
+        //fba.log(JSON.stringify(slide_file[key]));
+        //fba.log(divHeight)
+
+        if (x5h != imgh) {
+          fba.writeFile(fba.getVar("slide_file"), JSON.stringify(slide_file, null, 2))
+        }
+      }
+      function DataLoad(mode) {
+        var slide_file = JSON.parse(request(fba.getVar("slide_file")));
+        var key = rule.title;
+        if (key == '聚阅√' || key == '聚阅') {
+          //key = key + '-' + cfg.sname;
+          key = "聚阅" + '-' + cfg.sname;
+        }
+        let result = slide_file[key][mode];
+        fba.log(result)
+      }
+
+
+      // 高api判断
+      function getDpix(ratio) {
+        if (ratio == undefined) {
+          ratio = window.devicePixelRatio;
+        }
+        var dpix = 1;
+        switch (ratio) {
+          case 1.5:
+            dpix = 2;
+            break;
+          case 3:
+            dpix = 1;
+            break;
+          default:
+            dpix = (3 / ratio).toFixed(1);
+        }
+        return dpix;
+      }
+
+      // 设置圆角
+      function setContentCss(px) {
+        $(".content").css("border-radius", px);
+        $(".content img").css("border-radius", px);
+        $(".desc").css("border-bottom-left-radius", px);
+        $(".desc").css("border-bottom-right-radius", px);
+      }
+      /*----------通用方法----------*/
+
+
+      /*----------通用变量----------*/
+      var divHeight = Math.round(window.innerHeight);
+      var divWidth = Math.round(window.innerWidth);
+      var ratio = window.devicePixelRatio;
+      var dpix = getDpix(ratio);
+      var dpi = ratio * 160;
+      var zoom = (divWidth / dpi).toFixed(3);
+      //fba.log(zoom)
+      /*if(zoom<1){
+        zoom=1;
+      }*/
+      /*----------通用变量----------*/
+
+      var custom = false;
+      var config = cfg;
+
+      if (config != undefined && config.custom == true) {
+        custom = config.custom;
+      }
+
+      try {
+        console.log(JSON.stringify(custom));
+        //fba.log(JSON.stringify(custom));
+      } catch { }
+
+      var dots = config.dots != undefined ? config.dots : false;
+      var cfg_arrows = config.arrows != undefined ? config.arrows : false;
+      try {
+        console.log("dots:" + dots);
+        //fba.log("dots:"+dots);
+      } catch (e) { }
+
+      //
+
+
+      if (config.descfz != undefined) {
+        $('.desc').css("font-size", config.descfz);
+      }
+
+      //自定义
+      if (custom) {
+        //fba.log(JSON.stringify(config))
+        var autoplay = config.autoplay;
+        var imgheight = config.x5h - (!notitle ? 40 : 10);
+        var imgwidth = config.imgw;
+        var speed = config.speed;
+        PLAY_SPEED = speed * 1000;
+        var show = config.show;
+        var scroll = config.scroll;
+        var fit = config.fit;
+        if (show == "1") {
+          setContentCss("15px");
+          $(".slider video").css("border-radius", "15px");
+        }
+
+        if (show == "2") {
+          setContentCss("8px");
+          $(".slider video").css("border-radius", "8px");
+        }
+
+        $(".slider").slick({
+          lazyLoad: "ondemand",
+          autoplaySpeed: speed * 1000,
+          slidesToShow: show,
+          autoplay: autoplay,
+          arrows: cfg_arrows,
+          dots: dots,
+
+          //cssEase: 'linear',
+          slidesToScroll: scroll,
+          pauseOnFocus: false,
+          pauseOnHover: false,
+          pauseOnDotsHover: false,
+          //variableWidth: true,
+          adaptiveHeight: true
+        });
+
+        if (show <= 3 && config.zoom) {
+          var divHeight = imgheight;
+          switch (show) {
+            case 1:
+              divHeight = Math.round(212 / dpix * zoom);
+              break;
+            case 2:
+              divHeight = Math.round(125 / dpix * zoom);
+              break;
+            case 3:
+              divHeight = Math.round(150);
+              break;
+          }
+          fba.putVar("slide_height", divHeight);
+          fba.refreshX5Desc("list&&" + (divHeight + (!notitle ? 40 : 10)));
+          DataSave(divHeight);
+          imgheight = divHeight;
+        }
+
+        $(".slider").css("height", imgheight);
+        $(".slider img").css("height", imgheight);
+        $(".slider img").css("width", "100%");
+        $(".content img").css("object-fit", fit);
+        if (isvideo) {
+          $(".slider video").css("height", imgheight);
+        }
+
+      } else {
+        var size = 1;
+        var images = document.querySelectorAll(".content img");
+
+        function getImageSize(url) {
+          return new Promise(function (resolve, reject) {
+            let image = new Image();
+            image.onload = function () {
+              resolve({
+                width: image.width,
+                height: image.height
+              });
+            };
+            image.onerror = function () {
+              reject(new Error('error'));
+            };
+            image.src = url;
+          });
+        }
+
+        (async () => {
+          var key = rule.title;
+          var tag = '_size';
+          if (key == '聚阅√'||key=='聚阅') {
+            key = key + '-' + cfg.sname + tag;
+          }
+          if (debug) {
+            key = 'debug' + tag;
+          }
+          try {
+            console.log("key:"+key);
+            //key
+            x5log("key:"+key);
+          } catch { }
+
+          //getItemWithExpiration('myData'); 
+          //setItemWithExpiration('myData', 'Hello, World!', 3600); 
+
+          let size = getItemWithExpiration(key);
+          console.log(size);
+
+          var imgs = $(".content");
+          if (size == null) {
+            imgs.hide();
+            size = await getImageSize(images[0].src);
+            setItemWithExpiration(key, JSON.stringify(size), 3600 * 24);
+          } else {
+            size = JSON.parse(size)
+          }
+          imgs.show();
+
+          var o = 'horizontal';
+          if (size.width > size.height) {
+            console.log('横向图片');
+          } else {
+            o = 'vertical';
+            console.log('竖向图片');
+          }
+
+          imgcount = images.length;
+
+          console.log(ratio);
+          console.log('z:' + zoom);
+
+          if (isvideo) {
+            size = 1;
+            divHeight = 210;
+            console.log("video");
+          } else {
+            var im = images.length;
+            console.log(im)
+            //im = 8;
+            try {
+              //fba.log(im);
+              //fba.log(o);
+            } catch { }
+
+            if (!(size.width / size.height > 2)) {
+              if (im % 2 === 0 || im % 3 === 0) {
+                if (o == 'horizontal') {
+                  size = 2;
+                  divHeight = Math.round(125 / dpix * zoom);
+                } else {
+                  if (o == 'vertical' && im % 3 === 0) {
+                    size = 3;
+                    divHeight = Math.round(150);
+                  } else {
+                    size = 2;
+                    divHeight = Math.round((125 / dpix) * zoom);
+                  }
+                }
+              } else if (im % 3 === 0) {
+                size = 3;
+                divHeight = Math.round(150);
+              } else {
+                size = 1;
+                divHeight = Math.round(212 / dpix * zoom);
+              }
+            } else {
+              size = 1;
+              divHeight = Math.round(212 / dpix * zoom);
+            }
+            console.log(divHeight)
+
+            switch (size) {
+              case 1:
+                setContentCss("15px");
+                break;
+              case 2:
+                //log('%3');
+                setContentCss("8px");
+                break;
+              case 3:
+                setContentCss("5px");
+                break;
+              default:
+                break;
+            }
+          }
+
+          try {
+            if (isvideo) {
+              $(".pause").css("opacity", "1");
+              fba.putVar("slide_height", divHeight);
+              fba.refreshX5Desc("list&&" + (divHeight + (!notitle ? 40 : 10)));
+            } else {
+              fba.putVar("slide_height", divHeight);
+              fba.refreshX5Desc("list&&" + (divHeight + (!notitle ? 40 : 10)));
+            }
+            DataSave(divHeight);
+          } catch { }
+
+
+          $(".slider").slick({
+            lazyLoad: "ondemand",
+            autoplaySpeed: PLAY_SPEED,
+            slidesToShow: size,
+            autoplay: true,
+            dots: false, //6-07
+            dots: cfg.dots,
+            arrows: cfg_arrows,
+            //cssEase:'linear',
+            slidesToScroll: size,
+            pauseOnFocus: false,
+            pauseOnHover: false,
+            pauseOnDotsHover: false,
+            // variableWidth: true,
+            adaptiveHeight: true
+          });
+
+          if (!isvideo) {
+            $(".slider").css("height", divHeight);
+            $(".slider img").css("height", divHeight);
+            $(".slider img").css("width", "100%");
+            $(".content img").css("object-fit", "cover");
+          } else {
+            $(".content img").css("object-fit", "cover");
+            $(".slider img").css("width", "100%");
+            $(".slider img").css("height", divHeight);
+            $(".slider video").css("height", divHeight);
+          }
+
+        })();
+        // {width: 1920, height: 1200}
+
+        window.onorientationchange = function (event) {
+          if (window.orientation === 0) {
+            // 竖屏方向
+            handleOrientationChange("vertical");
+          } else {
+            // 横屏方向
+            handleOrientationChange("horizontal");
+          }
+        };
+
+        function handleOrientationChange(orientation) {
+          // 在这里处理方向变化的逻辑，可以根据orientation参数来做不同的处理
+
+        }
+
+        function rotate(imgs) {
+          if (window.orientation == 180 || window.orientation == 0) {
+            console.log("竖屏");
+          }
+          if (window.orientation == 90 || window.orientation == -90) {
+            console.log("横屏");
+          }
+        }
+
+
+        /*$(".slider").slick({
+          lazyLoad: "ondemand",
+          autoplaySpeed: PLAY_SPEED,
+          slidesToShow: size,
+          autoplay: true,
+          dots:dots,
+          arrows: false,
+          slidesToScroll: size,
+          pauseOnFocus: false,
+          pauseOnHover: false,
+          pauseOnDotsHover: false,
+          // variableWidth: true,
+          adaptiveHeight: true
+        });*/
+
+        try {
+          //console.log(window.innerWidth + "," + window.innerHeight);
+          //fba.log(window.innerWidth + "," + window.innerHeight);
+        } catch { }
+
+        try {
+          //console.log(divWidth + "," + divHeight);
+          //fba.log(divWidth + "," + divHeight);
+        } catch { }
+      }
+      
+      //超过或者等于16修改
+      if(cfg.dots){
+        if((cfg.dotstyle || "dots")=="dots"){
+          if($('.slider').slick('getSlick').slideCount>=16&&$('.slider').slick('slickGetOption', 'slidesToScroll')==1){
+            $(".slick-dots li").css({
+              flex: "1",
+              padding: "0 !important",
+              margin: "0 !important"
+            })
+          }
+        }
+      }
+
+      let dotsContainer = document.querySelector('.slick-dots');
+      let startX = 0;
+      if(dotsContainer){
+      dotsContainer.addEventListener('touchstart', e => {
+        startX = e.touches[0].clientX;
+      });
+
+      dotsContainer.addEventListener('touchend', e => {
+        $(".slick-dots li").removeClass("dot-zoom");
+      });
+
+      dotsContainer.addEventListener('touchmove', e => {
+        e.preventDefault(); // 阻止默认滚动行为
+        
+        let diffX = e.touches[0].clientX - startX;
+        //log($('.slick-dots .slick-active').width())
+        //console.log("diffX:" + diffX);
+        let ratio=parseInt($('.slick-dots .slick-active').width()*0.5);
+        //log(ratio)
+        //log(diffX)
+        if (Math.abs(diffX) > ratio) { // 滑动阈值
+          const sliderWidth = $('.slider').width(); // 获取幻灯片容器的宽度
+          const slideWidth = $('.slick-slide').outerWidth(true); // 获取每个幻灯片的宽度（包括边距）
+          let slidesPerPage = $('.slider').slick('slickGetOption', 'slidesToShow');
+          // 动态计算每页显示的幻灯片数量
+          //console.log(slidesPerPage)
+
+          const totalSlides = $('.slider').slick('getSlick').slideCount; // 获取幻灯片的总数
+          const totalDots=$(".slick-dots li").length;
+          //console.log("s:"+totalSlides)
+          let currentIndex = $('.slick-dots .slick-active').index(); // 获取当前激活点的索引
+          let newIndex = currentIndex + (diffX > 0 ? 1 : -1);
+          //log(newIndex)
+
+          //let newIndex = currentIndex + (diffX > 0 ? -1 : 1); // 根据滑动方向计算新的点索引
+        
+          // 确保新的索引在有效范围内（0 到 总幻灯片数量 / 每页幻灯片数）
+          
+          
+          /*if (newIndex < 0) {
+            newIndex = Math.floor(totalSlides / slidesPerPage) - 1; // 到达最左侧时，跳转到最后一个
+          } else if (newIndex >= Math.floor(totalSlides / slidesPerPage)) {
+            newIndex = 0; // 到达最右侧时，跳转到第一个
+          }*/
+          
+          if(newIndex<0){
+            newIndex=totalDots-1;
+          }else if(newIndex>=totalDots){
+            newIndex=0;
+          }
+          
+          // 更新激活点
+          //$(dotsContainer.children[currentIndex]).removeClass('slick-active');
+          //$(dotsContainer.children[newIndex]).addClass('slick-active');
+          // 根据每页显示的幻灯片数，计算出新的幻灯片索引
+
+          // 动态触发点击
+          $(".slick-dots li:eq(" + newIndex + ")").click();
+
+          const newSlideIndex = newIndex * slidesPerPage;
+          //log(newSlideIndex)
+          // 移动到正确的幻灯片索引
+          //$('.slider').slick('slickGoTo', newSlideIndex); // 使用slickGoTo移动到新幻灯片索引
+          // 重置起始位置
+          $(".slick-dots li").removeClass("dot-zoom");
+          $(".slick-dots .slick-active").addClass("dot-zoom");
+          startX = e.touches[0].clientX;
+        }
+      });
+      }
+
+
+
+      // 设置进度条持续时间
+      function setProgressDuration(duration) {
+        // 选择所有slick-dots的li元素
+        $(':root').css('--progress-duration', duration + 's');
+        /*$('.slick-dots li').each(function() {
+          // 设置CSS变量
+          $(this).css('--progress-duration', duration + 's');
+        });*/
+      }
+
+
+      function getSlickAnimationDuration() {
+        // 获取slick实例
+        var slickInstance = $('.slider').data('slick');
+        // 获取动画的持续时间
+        var animationDuration = slickInstance.settings.speed;
+        console.log('Slick animation duration:', animationDuration, 'ms');
+        return animationDuration;
+      }
+
+      let slickspeed = $('.slider').slick('slickGetOption', 'autoplaySpeed');
+
+      let arrows = $('.slider').slick('slickGetOption', 'arrows');
+
+      //log("arrows:" + arrows)
+
+      //log("speed:"+slickspeed)
+
+      //设置进度条
+      setProgressDuration(slickspeed / 1000);
+
+      function resetProgressBar() {
+        const $progressBar = $('.slick-dots-progress');
+        if ($progressBar.length) {
+          console.log("重置动画");
+          let originalAnimation = $progressBar[0].style.animation;
+          $progressBar[0].style.animation = 'none'; // 重置宽度为0
+          $progressBar[0].style.width = '0%';
+          $progressBar[0].offsetWidth;
+          // 4. 恢复动画配置
+          setTimeout(() => {
+            $progressBar[0].style.animation = originalAnimation;
+            //console.log('动画已恢复，宽度：', $progressBar.width());
+          }, 0);
+        }
+      }
+
+      var element = $(".slider");
+      element.on("afterChange", function (event, slick) {
+        //const $activeSlide = $(slick.$slides[slick.currentSlide]);
+        handleProgressBarForActiveSlide(slick);
+        var allVideos = document
+          .querySelector(".slider")
+          .getElementsByTagName("video"); // 获取页面上所有的 video 元素
+        // 遍历所有的 video 元素，检查它们是否处于播放状态，并暂停正在播放的视频
+        $(".videoimg").css("z-index", "1");
+        $(".videoimg").css("opacity", "1");
+        for (var i = 0; i < allVideos.length; i++) {
+          if (!allVideos[i].paused) {
+            // 如果视频没有暂停且不是当前元素
+            allVideos[i].removeEventListener("pause", function () {
+              // 视频暂停时执行的操作
+              console.log("取消事件");
+              element.slick("slickPlay");
+              // 在这里添加其他需要执行的操作
+            });
+            allVideos[i].pause(); // 暂停该视频
+          }
+        }
+        if (element.find(".slick-current video").length > 0) {
+          $(".pause").css("opacity", "1");
+          var _videoID = element.find(".slick-current video").attr("id"); //HTML里要给video标签添加id属性
+          var _videoObj = document.getElementById(_videoID);
+          //_videoObj.play();
+          _videoObj.addEventListener("pause", function () {
+            // 视频暂停时执行的操作
+            $(".slider button").css("visibility", "visible");
+            console.log("视频已暂停");
+            element.slick("slickPlay");
+            playstatus = true;
+            // 在这里添加其他需要执行的操作
+          });
+
+          _videoObj.addEventListener("play", function () {
+            $(".slider button").css("visibility", "hidden");
+            console.log("视频已播放");
+            element.slick("slickPause");
+            playstatus = false;
+          });
+
+          _videoObj.addEventListener(
+            "ended",
+            function () {
+              element.slick("slickPlay");
+              playstatus = true;
+              _videoObj.load();
+              element.slick("slickNext");
+            },
+            false
+          );
+        } else {
+          $(".pause").css("opacity", "0");
+        }
+      });
+      //console.log(element.find(".slick-current video"))
+
+      if (element.find(".slick-current video").length > 0) {
+        $(".pause").css("opacity", "1");
+        var _videoID = element.find(".slick-current video").attr("id"); //HTML里要给video标签添加id属性
+        var _videoObj = document.getElementById(_videoID);
+        //_videoObj.play();
+        _videoObj.addEventListener("pause", function () {
+          // 视频暂停时执行的操作
+          console.log("视频已暂停");
+          element.slick("slickPlay");
+          playstatus = true;
+          // 在这里添加其他需要执行的操作
+        });
+
+        _videoObj.addEventListener("play", function () {
+          console.log("视频已播放");
+          element.slick("slickPause");
+          playstatus = false;
+        });
+        var videocove = _videoObj.poster;
+        console.log(videocove);
+        _videoObj.addEventListener(
+          "ended",
+          function () {
+            element.slick("slickPlay");
+            playstatus = true;
+            _videoObj.load();
+            element.slick("slickNext");
+          },
+          false
+        );
+      } else {
+        $(".pause").css("opacity", "0");
+      }
+    };
+
+    function getEl() {
+      var elist = Array.from(document.querySelectorAll(".text"));
+      if (elist.length == 0) {
+        return;
+      }
+      var set = new Set();
+      elist.forEach(x => set.add(x.offsetHeight));
+      var max = Array.from(set);
+
+      if (max.length == 1) {
+        return;
+      }
+      //max = Math.max.apply(null, max);
+
+      var maxHeights = Array.from(max).sort((a, b) => b - a);
+
+      var filteredHeights = maxHeights.slice(0, maxHeights.length - 1);
+
+      var slist = elist.filter(x => filteredHeights.includes(x.offsetHeight));
+
+      slist.forEach(x => {
+        var html = x.outerHTML;
+        //console.log(html)
+        x.classList.remove("text");
+        x.classList.add("scroll");
+        x.innerHTML =
+          "<span class='scroll1'>" +
+          x.innerHTML +
+          "</span><span class='scroll2'>" +
+          x.innerHTML +
+          "</span>";
+      });
+
+      var scrolls = Array.from(document.querySelectorAll(".scroll"));
+      scrolls.forEach(x => {
+        var textElement = x.querySelector(".scroll1");
+        var textWidth = textElement.offsetWidth;
+        // 将文本宽度应用为 CSS 变量
+        textElement.style.setProperty("--textWidth--", textWidth + "px");
+        var textElement = x.querySelector(".scroll2");
+        var textWidth = textElement.offsetWidth;
+        // 将文本宽度应用为 CSS 变量
+        textElement.style.setProperty("--textWidth--", textWidth + "px");
+      });
+    }
+
+    function getObjectfit() {
+      var images = document.querySelectorAll(".content img");
+      // 遍历所有选中的img元素
+      images.forEach(function (image) {
+        // 获取计算后的样式
+        var styles = window.getComputedStyle(image);
+        // 获取object-fit属性的值
+        var objectFitValue = styles.getPropertyValue("object-fit");
+        // 输出获取到的object-fit值
+        try {
+          console.log("object-fit属性值：", objectFitValue);
+          //fba.log(objectFitValue);
+        } catch { }
+      });
+    }
+
+    $(function () {
+      setTimeout(function () {
+        console.log("延迟0秒后执行的操作");
+        try {
+          //fba.log("test")
+          //fba.log(fba.getVar("slidedata"))
+          rule = JSON.parse(fba.getVar("slide_rule"));
+          data = JSON.parse(fba.getVar("slide_data"));
+          cfg = JSON.parse(fba.getVar("slide_cfg"));
+          jkdata = JSON.parse(fba.getVar("slide_jkdata"));
+          //fba.log(JSON.stringify(data));
+          //log(cfg)
+          if (rule.hasOwnProperty("title")) {
+            log.setHeader(rule.title + "x5");
+          }
+        } catch { }
+        //fba.refreshPage(false);
+        processData(data, cfg);
+        getObjectfit()
+      }, 0); // 2000毫秒即2秒
+      //processData(data);
+      //getEl();
+    });
+  </script>
+</head>
+
+<body>
+  <div class="msgbox"></div>
+  <button class="pause" style="
+        position: absolute;
+        height: 50px;
+        width: 50px;
+        top: 0px;
+        left: 0px;
+        opacity: 0;
+        margin: 0 0 0 5px;
+        background: transparent;
+        z-index: 999;
+        border: transparent;
+      " onclick="pause()">
+    <svg t="1699937434933" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg"
+      p-id="15527" width="24" height="24">
+      <path class="path1" d="M512 85.333333C277.333333 85.333333
+              85.333333 277.333333 85.333333 512s192 426.666667 426.666667
+              426.666667 426.666667-192
+              426.666667-426.666667c0-236.8-192-426.666667-426.666667-426.666667z
+              m181.333333 460.8l-256 155.733334c-2.133333 2.133333-6.4
+              2.133333-10.666666 2.133333s-6.4
+              0-10.666667-2.133333c-6.4-4.266667-10.666667-10.666667-10.666667-19.2V362.666667c0-4.266667
+              0-8.533333 4.266667-12.8 6.4-10.666667 19.2-12.8 29.866667-6.4l256
+              164.266666c6.4 4.266667 10.666667 10.666667 10.666666 19.2-2.133333
+              8.533333-6.4 14.933333-12.8 19.2z" fill="#f4f4f53d" p-id="15528" stroke="#1862ff" stroke-width="50">
+      </path>
+    </svg>
+  </button>
+  <button id="setting"
+    style="position: absolute;height: 50px;width: 50px;top: 0px;right: 0px;background: transparent;z-index: 999;border: transparent;"></button>
+
+  <div class="slider"></div>
+  <div id="show"></div>
+  <script>
+    const $button = $('#setting');
+    let pressTimer = null;
+    let isLongPress = false;
+    const LONGPRESS_DELAY = 500; // 长按阈值（毫秒）
+
+    // 长按事件处理
+    function handleLongPress() {
+      //log('长按触发');
+      // 添加长按操作
+      setbtnl();
+    }
+
+    // 点击事件处理
+    function handleClick() {
+      //log('点击触发');
+      // 保留原有点击事件
+      setbtn();
+    }
+
+    // 开始按压
+    function startPress() {
+      pressTimer = setTimeout(() => {
+        if (!isLongPress) {
+          isLongPress = true;
+          handleLongPress();
+        }
+      }, LONGPRESS_DELAY);
+    }
+
+    // 结束按压
+    function endPress() {
+      clearTimeout(pressTimer);
+      isLongPress = false;
+    }
+
+    // 绑定事件
+    $button
+      // PC端事件
+      .on('mousedown', startPress)
+      .on('mouseup mouseleave mouseout', endPress)
+      .on('click', function (e) {
+        // 防止长按时触发默认点击
+        if (!isLongPress) {
+          handleClick();
+        }
+      })
+      // 移动端事件
+      .on('touchstart', startPress)
+      .on('touchend touchcancel', endPress);
+
+
+    window.onload = function () {
+      // 创建一个 div 元素
+      var dynamicDiv = document.createElement("div");
+      // 设置 div 的样式，使其显示在页面底部
+      dynamicDiv.style.position = "fixed";
+      dynamicDiv.style.bottom = "10px"; // 调整这个值以改变距离底部的距离
+      dynamicDiv.style.left = "10px";
+      dynamicDiv.style.zIndex = "9999";
+      dynamicDiv.style.padding = "10px";
+      dynamicDiv.style.background = "#f0f0f0";
+      dynamicDiv.style.border = "1px solid #ccc";
+      // 将 div 添加到页面中
+      //document.body.appendChild(dynamicDiv);
+
+      // 更新 div 的内容为当前窗口宽度
+      dynamicDiv.textContent =
+        "窗口window.innerWidth为：" +
+        window.innerWidth +
+        "px" +
+        "窗口window.innerHeight：" +
+        window.innerHeight +
+        "px";
+      // 监听窗口大小变化事件，实时更新 div 的内容
+      window.addEventListener("resize", function () {
+        //dynamicDiv.textContent = "窗口宽度为：" + window.innerWidth + "px";
+      });
+    };
+  </script>
+</body>
+
+</html>
